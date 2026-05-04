@@ -16,10 +16,28 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:60px;}
+.section{scroll-margin-top:115px;}
 
 /* ── Login screen ── */
 #loginScreen{display:flex;position:fixed;inset:0;z-index:500;background:var(--green);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
 #loginScreen.hidden{display:none;}
+#pinScreen{display:flex;position:fixed;inset:0;z-index:600;background:var(--green);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+#pinScreen.hidden{display:none;}
+#pinBox{background:white;border-radius:20px;padding:32px 28px;width:100%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.18);text-align:center;}
+#pinBox h2{font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+#pinBox p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+#pinDots{display:flex;justify-content:center;gap:14px;margin-bottom:20px;}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:white;transition:background .15s,border-color .15s;}
+.pin-dot.filled{background:var(--green);border-color:var(--green);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+#pinGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;}
+.pin-key{height:62px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg);font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--ink);cursor:pointer;transition:background .08s,transform .06s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.pin-key:active{background:var(--green-pale);transform:scale(.94);}
+.pin-key-wide{grid-column:span 2;height:62px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg);font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--ink);cursor:pointer;transition:background .08s,transform .06s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.pin-key-wide:active{background:var(--green-pale);transform:scale(.94);}
+.pin-key-del{height:62px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg);font-size:20px;color:var(--muted);cursor:pointer;transition:background .08s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.pin-key-del:active{background:#fce4e4;}
+#pinError{font-size:13px;color:var(--red);min-height:18px;margin-top:2px;}
 .login-logo{text-align:center;margin-bottom:36px;}
 .login-logo h1{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:6px;}
 .login-logo h2{font-size:24px;font-weight:600;color:white;letter-spacing:-.02em;}
@@ -88,7 +106,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .admin-link:hover{color:white;}
 
 /* ── Step bar ── */
-.step-bar{display:flex;gap:4px;padding:12px 20px;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.step-bar{display:flex;gap:4px;padding:12px 20px;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:90;box-shadow:0 2px 6px rgba(0,0,0,.06);}
 .step-bar::-webkit-scrollbar{display:none;}
 .step-pill{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;font-family:'DM Mono',monospace;background:var(--bg);color:var(--muted);border:1px solid var(--border);cursor:pointer;transition:all .2s;}
 .step-pill.active{background:var(--green);color:white;border-color:var(--green);}
@@ -364,13 +382,28 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 .inv-group.locked select{display:none;}
 .inv-group.locked .add-item-btn{display:none;}
 .restock-round.locked .restock-hdr{background:#6b7570;}
-.lock-restock-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--ink);color:white;border:none;border-radius:10px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin:10px 16px 14px;transition:opacity .15s;}
-.lock-restock-btn:hover{opacity:.85;}
+.lock-restock-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:white;border:none;border-radius:10px;padding:14px 24px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin:14px 16px 6px;width:calc(100% - 32px);box-sizing:border-box;transition:opacity .15s;letter-spacing:.01em;}
+.lock-restock-btn:hover{opacity:.88;}
 .restock-body{overflow:hidden;transition:max-height .25s ease;}
 .restock-body.collapsed{max-height:0!important;}
 .restock-hdr.locked{cursor:pointer;}
 .restock-hdr.locked:hover{opacity:.88;}
 .weight-warn{font-size:11px;color:var(--red);background:var(--red-pale);border:1px solid #f5c6c2;border-radius:6px;padding:4px 8px;margin-top:4px;display:none;line-height:1.4;}
+
+/* ── How To Use manual overlay ──────────────────────────────────────────── */
+#manualOverlay{display:none;position:fixed;inset:0;z-index:700;background:var(--bg);overflow-y:auto;}
+#manualOverlay.open{display:block;}
+.manual-hdr{background:var(--green);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;}
+.manual-hdr h2{font-size:18px;font-weight:600;letter-spacing:-.01em;}
+.manual-close{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1;}
+.manual-body{max-width:680px;margin:0 auto;padding:24px 20px 60px;}
+.manual-section{margin-bottom:32px;}
+.manual-section h3{font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--green-mid);}
+.manual-step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.manual-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green);color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;margin-top:2px;}
+.manual-step-body strong{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.manual-step-body p{font-size:13px;color:var(--muted);line-height:1.6;}
+.manual-tip{background:var(--green-pale);border:1px solid var(--green-mid);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--green);line-height:1.6;margin-top:4px;}
 
 /* ── Quantity stepper ── */
 .qty-stepper{display:flex;align-items:center;flex-shrink:0;}
@@ -538,6 +571,34 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 <body>
 
 <!-- set-password overlay removed — passwords managed by admin -->
+
+<!-- ══ PIN SCREEN ══════════════════════════════════════════ -->
+<div id="pinScreen">
+  <div id="pinBox">
+    <h2>Beverage Cart</h2>
+    <p>Enter site PIN to continue</p>
+    <div id="pinDots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div id="pinGrid">
+      <button class="pin-key" onclick="pinDigit('1')">1</button>
+      <button class="pin-key" onclick="pinDigit('2')">2</button>
+      <button class="pin-key" onclick="pinDigit('3')">3</button>
+      <button class="pin-key" onclick="pinDigit('4')">4</button>
+      <button class="pin-key" onclick="pinDigit('5')">5</button>
+      <button class="pin-key" onclick="pinDigit('6')">6</button>
+      <button class="pin-key" onclick="pinDigit('7')">7</button>
+      <button class="pin-key" onclick="pinDigit('8')">8</button>
+      <button class="pin-key" onclick="pinDigit('9')">9</button>
+      <button class="pin-key-wide" onclick="pinDigit('0')">0</button>
+      <button class="pin-key-del" onclick="pinDel()">⌫</button>
+    </div>
+    <div id="pinError"></div>
+  </div>
+</div>
 
 <!-- ══ LOGIN SCREEN ════════════════════════════════════════ -->
 <div id="loginScreen">
@@ -715,6 +776,9 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   <button class="hamburger-menu-item" id="hmNewShift" onclick="closeHamburger();openNewShiftModal()" style="display:none">
     <span class="mi-icon">↺</span> New shift
   </button>
+  <button class="hamburger-menu-item" onclick="closeHamburger();openManual()">
+    <span class="mi-icon">📖</span> How to use this app
+  </button>
   <button class="hamburger-menu-item danger" onclick="closeHamburger();logout()">
     <span class="mi-icon">→</span> Sign out
   </button>
@@ -724,7 +788,11 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 <div id="settingsModal">
   <div class="settings-box">
     <h3>Settings</h3>
-    <p>Export your current admin settings (products, liquor, users, supplies) to a file. Import that file into any new version to restore everything instantly.</p>
+    <p>Settings are automatically synced to GitHub whenever you save changes in admin — all devices load the latest settings on startup. Use export/import as a backup or to migrate to a new app version.</p>
+    <div id="ghSyncStatus" style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+      GitHub sync: <span id="ghSyncLabel">checking...</span>
+    </div>
+
     <div class="settings-status" id="settingsStatus"></div>
     <button class="btn-primary" style="margin-top:0;margin-bottom:10px" onclick="exportSettings()">
       📤 Export settings to file
@@ -780,7 +848,7 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
     <label>Cash float received from Clubhouse ($)</label>
     <input type="number" id="cashFloat" placeholder="0.00" inputmode="decimal" step="0.01" min="0"
       style="font-family:'DM Mono',monospace"
-      oninput="autosave()">
+      oninput="autosave()" onblur="formatDollarInput(this)">
   </div>
   <p class="section-sub" style="margin-top:16px;margin-bottom:10px">Supplies checklist — confirm before heading out:</p>
   <div class="supplies-grid" id="suppliesChecklist"></div>
@@ -809,9 +877,9 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   <p class="section-sub">Each time you return with additional stock, tap "+ Add restock round", fill in what was added, then lock it. Locked rounds cannot be edited.</p>
   <div id="restockRounds"></div>
   <button class="add-btn" id="addRestockBtn" onclick="addRestockRound()">+ Add restock round</button>
-  <div class="nav-row">
+  <div class="nav-row" style="margin-top:4px">
     <button class="btn-secondary" onclick="goStep(2)">← View opening stock</button>
-    <button class="btn-primary" onclick="goStep(4)">Next — Closing count →</button>
+    <button class="btn-secondary" onclick="goStep(4)">Skip to closing count →</button>
   </div>
 </div>
 
@@ -831,10 +899,13 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   <h2 class="section-title">Cashout</h2>
   <p class="section-sub">Enter your Moneris totals, then send the completed report.</p>
   <div id="summaryContent"></div>
-  <div class="email-field">
-    <label>Your email — optional, to receive your own copy</label>
-    <input type="email" id="staffEmail" placeholder="yourname@email.com">
-    <p class="email-note">Report is always sent to accounting@copperhouse.ca and manager@copperhouse.ca.</p>
+  <div class="email-field" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+    <div style="font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Report will be emailed to</div>
+    <div id="reportRecipients" style="font-size:13px;color:var(--ink);line-height:1.8;font-family:'DM Mono',monospace;">
+      manager@copperhouse.ca<br>
+      accounting@copperhouse.ca<br>
+      <span style="color:var(--muted);font-style:italic">your registered email (sign in to see)</span>
+    </div>
   </div>
   <div id="emailStatus"></div>
   <div id="setupNote" style="display:none"></div>
@@ -978,14 +1049,33 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 ═══════════════════════════════════════════════════════════ -->
 <script>
 // ── Config ────────────────────────────────────────────────────────────────
-const EJS_SERVICE  = 'YOUR_SERVICE_ID';
-const EJS_TEMPLATE = 'YOUR_TEMPLATE_ID';
-const EJS_KEY      = 'YOUR_PUBLIC_KEY';
+const EJS_SERVICE  = 'service_359c7hf';
+const EJS_TEMPLATE = 'template_q3u1g35';
+const EJS_KEY      = '-5GXP4lit3bxVvDR_';
+
+// ── GitHub settings sync ───────────────────────────────────────────────────
+// Settings (products, liquor, supplies, users) are stored in settings.json
+// in the GitHub repo. On load the app fetches the latest. On admin save it
+// pushes the updated file back. This keeps all devices in sync automatically.
+const GH_OWNER  = 'copperhouseyk';
+const GH_REPO   = 'Beverage-Cart';
+const GH_FILE   = 'settings.json';
+// Generate a fine-grained GitHub token at:
+// github.com/settings/personal-access-tokens/new
+// Permissions needed: Contents → Read and Write on this repo only.
+const GH_TOKEN = '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';
 const FIXED_TO     = ['accounting@copperhouse.ca', 'manager@copperhouse.ca'];
 const ADMIN_PASS   = 'Admin123';
 
 // ── Passwords stored and compared as plain text ──────────────────────────
 // No hashing — passwords are visible and editable in the admin panel.
+
+// ── Dollar input formatter ────────────────────────────────────────────────────
+// Call onblur on any $ input to reformat to #.## (e.g. 50 → 50.00, .5 → 0.50)
+function formatDollarInput(el){
+  const v = parseFloat(el.value);
+  if(!isNaN(v) && el.value.trim() !== '') el.value = v.toFixed(2);
+}
 
 // ── Staff users ───────────────────────────────────────────────────────────
 // Schema: {id, fullName, email, phone, password, active}
@@ -994,22 +1084,8 @@ const ADMIN_PASS   = 'Admin123';
 // Admin password is set manually below.
 
 const SEED_USERS = [
-  {
-    id: 'u0',
-    fullName: 'Administrator',
-    email: 'accounting@copperhouse.ca',
-    phone: '',
-    password: 'Admin123',
-    active: true
-  },
-  {
-    id: 'u1',
-    fullName: 'Paul Henry',
-    email: 'paul@h2-solutions.ca',
-    phone: '(867) 446-4357',
-    password: 'PH4357',
-    active: true
-  }
+  {id:'u0', fullName:'Administrator', email:'accounting@copperhouse.ca', phone:'', password:'CH484rlr!!!', active:true},
+  {id:'u1', fullName:'Paul Henry',    email:'paul@h2-solutions.ca',       phone:'(867) 446-4357', password:'PH4357', active:true}
 ];
 
 let USERS = [];
@@ -1122,8 +1198,122 @@ function openSettingsModal(){
   }
   $('settingsModal').classList.add('open');
   $('settingsStatus').style.display='none';
+  // Show GitHub sync status
+  const lbl = $('ghSyncLabel');
+  if(lbl){
+    if(!GH_TOKEN){
+      lbl.textContent = '⚠ Not configured';
+      lbl.style.color = 'var(--amber)';
+    } else {
+      lbl.textContent = `✓ Configured — syncs to github.com/${GH_OWNER}/${GH_REPO}`;
+      lbl.style.color = 'var(--green)';
+    }
+  }
 }
 function closeSettingsModal(){ $('settingsModal').classList.remove('open'); }
+
+// ── GitHub settings sync functions ───────────────────────────────────────
+
+// Fetch settings.json from GitHub and apply to app
+async function fetchSettingsFromGitHub(){
+  if(!GH_TOKEN) return; // not configured
+  try {
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+    const resp = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if(!resp.ok) {
+      if(resp.status === 404) {
+        console.log('settings.json not found on GitHub yet — will create on first admin save');
+        return;
+      }
+      throw new Error(`GitHub fetch failed: ${resp.status}`);
+    }
+    const data = await resp.json();
+    const settings = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    // Apply fetched settings
+    if(settings.PRODUCTS) PRODUCTS = settings.PRODUCTS;
+    if(settings.LIQUOR)   LIQUOR   = settings.LIQUOR;
+    if(settings.SUPPLIES) SUPPLIES = settings.SUPPLIES;
+    if(settings.USERS){
+      // Merge: preserve passwords for existing users, add new ones
+      settings.USERS.forEach(u => {
+        const existing = USERS.find(x => x.email.toLowerCase() === u.email.toLowerCase());
+        if(!existing) USERS.push(u);
+        else {
+          existing.fullName = u.fullName;
+          existing.phone    = u.phone;
+          existing.active   = u.active;
+          existing.password = u.password; // sync password changes from admin
+        }
+      });
+      // Remove users that were deleted in admin (not in fetched list)
+      // Keep u0 always
+      const fetchedEmails = settings.USERS.map(u => u.email.toLowerCase());
+      USERS = USERS.filter(u => u.id === 'u0' || fetchedEmails.includes(u.email.toLowerCase()));
+    }
+    // Re-render everything with new settings
+    renderInv('openingGroups','open');
+    renderInv('closingGroups','close');
+    renderSuppliesChecklist();
+    renderPosHome();
+    console.log('✓ Settings loaded from GitHub');
+  } catch(err) {
+    console.warn('Could not load settings from GitHub:', err.message);
+  }
+}
+
+// Push current settings to GitHub as settings.json
+async function pushSettingsToGitHub(){
+  if(!GH_TOKEN) return; // not configured
+  const settings = {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    updatedBy: currentUser ? currentUser.email : 'unknown',
+    PRODUCTS, LIQUOR, SUPPLIES, USERS
+  };
+  const body = JSON.stringify(settings, null, 2);
+  const encoded = btoa(unescape(encodeURIComponent(body)));
+
+  try {
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+    // Get current file SHA (required for updates)
+    let sha = null;
+    const getResp = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if(getResp.ok) {
+      const existing = await getResp.json();
+      sha = existing.sha;
+    }
+    // Push the updated file
+    const putResp = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Settings updated by ${currentUser ? currentUser.fullName : 'admin'} — ${new Date().toLocaleString()}`,
+        content: encoded,
+        ...(sha ? {sha} : {})
+      })
+    });
+    if(!putResp.ok) throw new Error(`GitHub push failed: ${putResp.status}`);
+    console.log('✓ Settings saved to GitHub');
+    return true;
+  } catch(err) {
+    console.warn('Could not save settings to GitHub:', err.message);
+    return false;
+  }
+}
 
 function exportSettings(){
   const settings={
@@ -1184,49 +1374,51 @@ let SUPPLIES = [
   'Extra Moneris paper rolls',
   'Shooter cups',
   'Solo cups',
+  'Napkins',
 ];
 
 // ── Product catalogue ─────────────────────────────────────────────────────
 // Items now carry their own price. Groups are for display only.
 let PRODUCTS = [
   { group:'Alcoholic Drinks', on:true, items:[
-    {name:'Kokanee (can)',         price:7.50, on:true},
-    {name:'Budweiser (can)',        price:7.50, on:true},
-    {name:'Coors Light (can)',      price:7.50, on:true},
-    {name:"Alexander Keith's (can)",price:7.50, on:true},
-    {name:'Corona Extra (can)',     price:10.00,on:true},
-    {name:'Bud Light Tall (can)',   price:10.00,on:true},
-    {name:"Mott's Clamato Caesar (can)", price:10.00,on:true},
-    {name:'Strongbow Cider (can)',  price:10.00,on:true},
-    {name:'Twisted Tea (can)',      price:10.00,on:true},
-    {name:'Smirnoff Ice (can)',     price:10.00,on:true},
-    {name:'White Claw (can)',       price:10.00,on:true},
-    {name:'Ole (can)',              price:10.00,on:true},
-    {name:"Dillon's Gin Cocktail (can)", price:10.00,on:true},
-    {name:'NWT Brewing Tee Time (can)',  price:12.00,on:true},
+    {name:'Kokanee (can)',                  price:7.50, on:true},
+    {name:'Budweiser (can)',                price:7.50, on:true},
+    {name:'Coors Light (can)',              price:7.50, on:true},
+    {name:"Alexander Keith's (can)",        price:7.50, on:true},
+    {name:'Corona Extra (can)',             price:10.00,on:true},
+    {name:'Bud Light Tall (can)',           price:10.00,on:true},
+    {name:"Mott's Clamato Caesar (can)",    price:10.00,on:true},
+    {name:'Strongbow Cider (can)',          price:10.00,on:true},
+    {name:'Twisted Tea (can)',              price:10.00,on:true},
+    {name:'White Claw (can)',               price:10.00,on:true},
+    {name:'Ole (can)',                      price:10.00,on:true},
+    {name:"Dillon's Gin Cocktail (can)",    price:10.00,on:true},
+    {name:'NWT Brewing Tee Time (can)',     price:12.00,on:true},
   ]},
   { group:'Non-Alcoholic', on:true, items:[
-    {name:'Water (bottle)',         price:3.00, on:true},
-    {name:'Gatorade Orange (bottle)',price:4.50,on:true},
-    {name:'Gatorade Red (bottle)',  price:4.50, on:true},
-    {name:'Gatorade Blue (bottle)', price:4.50, on:true},
-    {name:'Gatorade Yellow (bottle)',price:4.50,on:true},
-    {name:'Gatorade Purple (bottle)',price:4.50,on:true},
-    {name:'Pepsi (bottle)',         price:4.00, on:true},
-    {name:'Ginger Ale (bottle)',    price:4.00, on:true},
-    {name:'Iced Tea (bottle)',      price:4.00, on:true},
-    {name:'Diet Pepsi (can)',       price:2.50, on:true},
+    {name:'Water (bottle)',                 price:3.00, on:true},
+    {name:'Gatorade Orange (bottle)',       price:4.50, on:true},
+    {name:'Gatorade Red (bottle)',          price:4.50, on:true},
+    {name:'Gatorade Blue (bottle)',         price:4.50, on:true},
+    {name:'Gatorade Yellow (bottle)',       price:4.50, on:true},
+    {name:'Gatorade Purple (bottle)',       price:4.50, on:true},
+    {name:'Pepsi (bottle)',                 price:4.00, on:true},
+    {name:'Diet Pepsi (bottle)',            price:4.00, on:true},
+    {name:'Ginger Ale (bottle)',            price:4.00, on:true},
+    {name:'Iced Tea (bottle)',              price:4.00, on:true},
+    {name:'Diet Pepsi (mini can)',          price:2.50, on:true},
+    {name:'Pepsi (mini can)',               price:2.50, on:true},
   ]},
   { group:'Snacks & Food', on:true, items:[
-    {name:'Oh Henry! Bar',          price:3.00, on:true},
-    {name:'Mars Bar',               price:3.00, on:true},
-    {name:'KitKat Bar',             price:3.00, on:true},
-    {name:'Snickers Bar',           price:3.00, on:true},
-    {name:"Lay's Classic",          price:4.00, on:true},
-    {name:"Lay's Salt & Vinegar",   price:4.00, on:true},
-    {name:"Lay's Barbecue",         price:4.00, on:true},
-    {name:'Doritos Nachos',         price:4.00, on:true},
-    {name:'Assorted Sandwiches',    price:12.00,on:true},
+    {name:'Oh Henry! Bar',                  price:3.00, on:true},
+    {name:'Mars Bar',                       price:3.00, on:true},
+    {name:'KitKat Bar',                     price:3.00, on:true},
+    {name:'Snickers Bar',                   price:3.00, on:true},
+    {name:"Lay's Classic",                  price:4.00, on:true},
+    {name:"Lay's Salt & Vinegar",           price:4.00, on:true},
+    {name:"Lay's Barbecue",                 price:4.00, on:true},
+    {name:'Doritos Nachos',                 price:4.00, on:true},
+    {name:'Assorted Sandwiches',            price:12.00,on:true},
   ]},
 ];
 
@@ -1242,7 +1434,7 @@ let LIQUOR = [
   {name:"Captain Morgan's Spiced",  price:7, on:true, bottleSizeMl:750, fullWeight:980,  emptyWeight:0},
   {name:'Smirnoff Vodka',       price:7, on:true, bottleSizeMl:750, fullWeight:960,  emptyWeight:0},
   {name:"Bailey's Irish Cream", price:7, on:true, bottleSizeMl:750, fullWeight:1100, emptyWeight:0},
-  {name:'Patrón Silver',        price:8, on:true, bottleSizeMl:750, fullWeight:1188, emptyWeight:0},
+  {name:'Patrón Silver',        price:8, on:true, bottleSizeMl:750, fullWeight:1260, emptyWeight:0},
 ];
 
 // liqBottles replaced by selectedLiquor: per-shift list of bottles staff actually took
@@ -1759,7 +1951,7 @@ function confirmAndLockOpening() {
   recomputeInventory(); // derive from opening counts − sold
   applyOpeningLockUI();
   autosave();
-  goStep(3);
+  goStep(6); // go straight to POS after confirming opening stock
 }
 
 function buildOpeningSummary() {
@@ -1839,7 +2031,13 @@ function confirmAndLockRestock() {
   closeRestockSummary();
   if(n !== null) {
     lockRestockRound(n);
-    if(_pendingRestockCb) _pendingRestockCb();
+    if(_pendingRestockCb){
+      // Called from auto-lock (e.g. adding new round or proceeding to closing) — run the callback
+      _pendingRestockCb();
+    } else {
+      // Normal lock from "Confirm restock" button — go to POS
+      goStep(6);
+    }
     // Update add button state
     if(restockCount >= MAX_RESTOCK){
       const b=$('addRestockBtn'); if(b){ b.textContent='Max 10 restock rounds reached'; b.disabled=true; }
@@ -2039,10 +2237,9 @@ function buildSummary() {
     </div>
 
     <div class="mon-block">
-      <label>Card payments — total charged on terminal (including tips)</label>
-      <input class="mon-input" type="number" id="mCard" placeholder="0.00" inputmode="decimal" step="0.01" min="0" oninput="recalc()">
-      <label>Tips — portion of terminal total that is tips</label>
-      <input class="mon-input" type="number" id="mTips" placeholder="0.00" inputmode="decimal" step="0.01" min="0" oninput="recalc()">
+      <label>Total card payments (including tips)</label>
+      <input class="mon-input" type="number" id="mCard" placeholder="0.00" inputmode="decimal" step="0.01" min="0" oninput="recalc()" onblur="formatDollarInput(this)">
+      <input type="hidden" id="mTips" value="0">
     </div>
 
     <div id="dTheoreticalNote" style="display:${usingTheoretical?'block':'none'};background:#fff8e1;border:1px solid var(--amber-b);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;line-height:1.6;color:#7a5f00;">
@@ -2104,7 +2301,14 @@ function buildSummary() {
   initSig();
   recalc(); // populate reconciliation fields immediately on render
 
-  if(EJS_KEY==='YOUR_PUBLIC_KEY'){
+  // Show the actual recipient list including the logged-in user's email
+  const recipEl = $('reportRecipients');
+  if(recipEl){
+    const staffEmail = currentUser ? (currentUser.email||'') : '';
+    recipEl.innerHTML = `manager@copperhouse.ca<br>accounting@copperhouse.ca${staffEmail ? '<br>'+staffEmail : ''}`;
+  }
+
+  if(EJS_KEY==='-5GXP4lit3bxVvDR_'){
     $('setupNote').style.display='block';
     $('setupNote').innerHTML=`<div class="setup-note">
       <strong>📧 One-time EmailJS setup required (free, ~5 min)</strong>
@@ -2225,10 +2429,10 @@ async function sendReport(){
   const mTips  = Math.max(0, parseFloat(($('mTips')||{}).value)||0); // D: tips
   const mCard  = Math.max(0, mTotal - mTips);                        // B−D: card only
   const cash   = Math.round(sd.total - mCard);                       // C: cash = A − (B−D)
-  const staffEmailInput = ($('staffEmail').value||'').trim();
+  const staffEmailInput = ''; // email field removed — use logged-in user's registered email
   // Also include staff's own email from their profile if not already entered
   const staffProfileEmail = currentUser ? (currentUser.email||'') : '';
-  const sEmail = staffEmailInput || staffProfileEmail;
+  const sEmail = staffProfileEmail;
 
   const itemsText=sd.itemLines.map(l=>`  ${l.name.padEnd(32)} x${String(l.qty).padStart(2)}  $${l.subtotal.toFixed(2)}`).join('\n');
   const liqText=sd.liqLines.map(l=>`  ${l.name.padEnd(32)} ${l.totalOz}oz  $${(l.totalOz*l.price).toFixed(2)}`).join('\n');
@@ -2284,11 +2488,11 @@ ${'─'.repeat(52)}
   btn.disabled=true; btn.textContent='Sending…';
   showStatus('info','Sending report…');
 
-  if(EJS_KEY==='YOUR_PUBLIC_KEY'){
+  if(EJS_KEY==='-5GXP4lit3bxVvDR_'){
     setTimeout(()=>{
       btn.disabled=false;
       btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send report`;
-      showStatus('info',`⚠ EmailJS not yet configured — see setup note.\n\nEmail preview:\n\n${body}`);
+      showStatus('info',`⚠ EmailJS not yet configured — see setup note.\n\nSubject: ${emailSubject}\nTo: ${allTo.join(', ')}\n\n${body}`);
     },600);
     return;
   }
@@ -2363,15 +2567,21 @@ function renderRecon() {
     const shotKey = posItemKey(l.name+'_shot');
     if(subtotalOz<0.01 && !posShotsSold[shotKey]) return;
 
-    // Theoretical sold = oz consumed from closing weights
-    const consumed = liqSoldData.find(s=>s.name===l.name);
-    const theoreticalSoldOz = consumed ? consumed.totalOz : '—';
-    // Ending count = available − theoretical sold
-    const endingOz = typeof theoreticalSoldOz==='number'
-      ? Math.max(0, subtotalOz - theoreticalSoldOz) : '—';
-    // Actual sold = POS shot count; variance = theoretical − actual
     const actualSoldShots = posShotsSold[shotKey] || 0;
-    const variance = typeof theoreticalSoldOz==='number' ? actualSoldShots - theoreticalSoldOz : '—';
+    let theoreticalSoldOz, endingOz, variance;
+    if(closingSubmitted){
+      // Actual: oz consumed from closing weights
+      const consumed = liqSoldData.find(s=>s.name===l.name);
+      theoreticalSoldOz = consumed ? consumed.totalOz : '—';
+      endingOz = typeof theoreticalSoldOz==='number'
+        ? Math.max(0, subtotalOz - theoreticalSoldOz) : '—';
+      variance = typeof theoreticalSoldOz==='number' ? actualSoldShots - theoreticalSoldOz : '—';
+    } else {
+      // Theoretical: ending = available − POS shots sold
+      theoreticalSoldOz = actualSoldShots;
+      endingOz = Math.max(0, subtotalOz - actualSoldShots);
+      variance = '—'; // suppressed until closing submitted
+    }
 
     const restockColData = {};
     Object.entries(restockOzMap).forEach(([r,oz])=>{ restockColData[parseInt(r)]=oz.toFixed(1)+'oz'; });
@@ -2403,13 +2613,24 @@ function renderRecon() {
       const totalRestock = Object.values(restocks).reduce((s,q)=>s+q,0);
       const subtotalAvail = opening + totalRestock;
       if(subtotalAvail === 0 && !posSold[key]) return;
-      const closingVal = parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
-      const theoreticalSold = subtotalAvail > 0 ? (subtotalAvail - closingVal) : '—';
       const actualSold = posSold[key] || 0;
-      const variance = (subtotalAvail>0 && typeof theoreticalSold==='number')
-        ? (actualSold - theoreticalSold) : '—';
+      let closingVal, theoreticalSold, endingCount, variance;
+      if(closingSubmitted){
+        // Actual: use physical closing count
+        closingVal = parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
+        theoreticalSold = subtotalAvail > 0 ? (subtotalAvail - closingVal) : '—';
+        endingCount = subtotalAvail > 0 ? closingVal : '—';
+        variance = (subtotalAvail>0 && typeof theoreticalSold==='number')
+          ? (actualSold - theoreticalSold) : '—';
+      } else {
+        // Theoretical: ending = available − POS sold; no variance yet
+        const theoreticalEnding = Math.max(0, subtotalAvail - actualSold);
+        endingCount = subtotalAvail > 0 ? theoreticalEnding : '—';
+        theoreticalSold = subtotalAvail > 0 ? actualSold : '—';
+        variance = '—'; // no variance until closing submitted
+      }
       rows.push({ name:item.name, opening, restocks, totalRestock, subtotalAvail,
-        closingVal: subtotalAvail>0 ? closingVal : '—',
+        closingVal: endingCount,
         theoreticalSold, actualSold, variance, key });
     });
   });
@@ -2451,9 +2672,10 @@ function renderRecon() {
 
   c.innerHTML=`
     <div class="recon-note">
-      <strong>Ending count</strong> is derived from closing weights (liquor) or the Closing tab (packaged goods).
+      ${!closingSubmitted ? '<strong style="color:var(--amber)">⚠ Closing count not yet submitted.</strong> Ending count shown is theoretical (Available − POS sold). Variance is suppressed until closing count is submitted via the Closing tab.<br><br>' : ''}
+      <strong>Ending count</strong> = ${closingSubmitted ? 'actual physical count (Closing tab)' : 'theoretical (Opening + Restocks − POS sold)'}.
       <strong>Theoretical sold</strong> = Available − Ending count.
-      <strong>Variance</strong> = Actual POS − Theoretical. Negative = sold less than expected (possible shrinkage); positive = POS recorded more than theoretical (check counts).
+      ${closingSubmitted ? '<strong>Variance</strong> = Actual POS − Theoretical. Negative = sold less than expected (possible shrinkage); positive = POS recorded more than theoretical (check counts).' : ''}
     </div>
     <div class="recon-wrap">
       <table class="recon-table">
@@ -2898,6 +3120,7 @@ function saveUserPopup(){
 
   draft.users = JSON.parse(JSON.stringify(USERS));
   saveState();
+  pushSettingsToGitHub(); // sync user changes to GitHub
   closeUserPopup();
   renderAdmin();
 }
@@ -2961,7 +3184,7 @@ function addNewLiq(){
   renderAdmin();
 }
 
-function applyAdmin(){
+async function applyAdmin(){
   syncDraftInputs();
   PRODUCTS=JSON.parse(JSON.stringify(draft.products));
   LIQUOR=JSON.parse(JSON.stringify(draft.liquor));
@@ -2972,6 +3195,9 @@ function applyAdmin(){
   renderSuppliesChecklist();
   renderPosHome();
   autosave();
+  // Push updated settings to GitHub so all devices stay in sync
+  const ok = await pushSettingsToGitHub();
+  if(ok) console.log('✓ Settings synced to GitHub');
   closeAdmin();
 }
 
@@ -3366,11 +3592,11 @@ function addPaymentRow(type){
         <div class="cash-sub-rows" id="cashsub_${rowIdx}">
           <div class="cash-sub-row">
             <label>Received from customer</label>
-            <input type="number" id="cash_recv_${rowIdx}" value="" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})">
+            <input type="number" id="cash_recv_${rowIdx}" value="" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})" onblur="formatDollarInput(this)">
           </div>
           <div class="cash-sub-row" id="cashchg_row_${rowIdx}" style="display:none">
             <label>Change given</label>
-            <input type="number" id="cash_chg_${rowIdx}" value="0.00" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})">
+            <input type="number" id="cash_chg_${rowIdx}" value="0.00" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})" onblur="formatDollarInput(this)">
           </div>
           <div class="cash-sub-row" id="cashtip_row_${rowIdx}" style="display:none">
             <label style="color:var(--green)">Cash tip</label>
@@ -3444,11 +3670,11 @@ function _renderOneRow(rowIdx, row){
         <div class="cash-sub-rows" id="cashsub_${rowIdx}">
           <div class="cash-sub-row">
             <label>Received from customer</label>
-            <input type="number" id="cash_recv_${rowIdx}" value="${row.tendered>0?row.tendered.toFixed(2):''}" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})">
+            <input type="number" id="cash_recv_${rowIdx}" value="${row.tendered>0?row.tendered.toFixed(2):''}" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})" onblur="formatDollarInput(this)">
           </div>
           <div class="cash-sub-row" id="cashchg_row_${rowIdx}" style="display:${showCalc?'flex':'none'}">
             <label>Change given</label>
-            <input type="number" id="cash_chg_${rowIdx}" value="${(row.change||0).toFixed(2)}" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})">
+            <input type="number" id="cash_chg_${rowIdx}" value="${(row.change||0).toFixed(2)}" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="updateCashCalc(${rowIdx})" onblur="formatDollarInput(this)">
           </div>
           <div class="cash-sub-row" id="cashtip_row_${rowIdx}" style="display:${showTip?'flex':'none'}">
             <label style="color:var(--green)">Cash tip</label>
@@ -3649,7 +3875,7 @@ ${'─'.repeat(44)}
 Thank you for your purchase!
 The Swinger's Club Golf Course`;
 
-  if(EJS_KEY==='YOUR_PUBLIC_KEY') return; // silent skip in demo mode
+  if(EJS_KEY==='-5GXP4lit3bxVvDR_') return; // silent skip in demo mode
   try{
     emailjs.init(EJS_KEY);
     await emailjs.send(EJS_SERVICE, EJS_TEMPLATE,{
@@ -3837,6 +4063,10 @@ function autosave() {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  pinInit(); // show PIN screen before anything else
+  // Fetch latest settings from GitHub (products, users, liquor, supplies)
+  // This runs in background — app is usable immediately with defaults
+  fetchSettingsFromGitHub();
   const saved = hasSavedState();
 
   if (saved) {
@@ -3944,6 +4174,56 @@ function ckpCancel(){
   $('cardKpOverlay').style.display = 'none';
 }
 
+
+// ── Site PIN ──────────────────────────────────────────────────────────────────
+const SITE_PIN = '2017';
+let _pinEntry = '';
+
+function pinInit(){
+  // If PIN already passed this session, skip straight through
+  if(sessionStorage.getItem('pin_ok') === 'yes'){
+    $('pinScreen').classList.add('hidden');
+    return;
+  }
+  $('pinScreen').classList.remove('hidden');
+}
+
+function pinDigit(d){
+  if(_pinEntry.length >= 4) return;
+  _pinEntry += d;
+  pinUpdateDots(false);
+  if(_pinEntry.length === 4) setTimeout(pinCheck, 120);
+}
+
+function pinDel(){
+  _pinEntry = _pinEntry.slice(0,-1);
+  pinUpdateDots(false);
+  $('pinError').textContent = '';
+}
+
+function pinUpdateDots(isError){
+  for(let i=0;i<4;i++){
+    const dot = $('pd'+i);
+    dot.classList.toggle('filled', !isError && i < _pinEntry.length);
+    dot.classList.toggle('error', isError);
+  }
+}
+
+function pinCheck(){
+  if(_pinEntry === SITE_PIN){
+    sessionStorage.setItem('pin_ok','yes');
+    $('pinScreen').classList.add('hidden');
+  } else {
+    pinUpdateDots(true);
+    $('pinError').textContent = 'Incorrect PIN. Please try again.';
+    setTimeout(()=>{
+      _pinEntry='';
+      pinUpdateDots(false);
+      $('pinError').textContent='';
+    }, 1200);
+  }
+}
+
 </script>
 
 
@@ -3976,5 +4256,77 @@ function ckpCancel(){
     <button onclick="ckpCancel()"  style="display:block;width:100%;text-align:center;color:#636366;font-size:13px;background:none;border:none;cursor:pointer;margin-top:10px;padding:4px;font-family:'DM Sans',sans-serif;">Cancel</button>
   </div>
 </div>
+
+<!-- ══ HOW TO USE MANUAL ═════════════════════════════════════════════════ -->
+<div id="manualOverlay">
+  <div class="manual-hdr">
+    <h2>📖 How to Use — Beverage Cart</h2>
+    <button class="manual-close" onclick="closeManual()">✕</button>
+  </div>
+  <div class="manual-body">
+
+    <div class="manual-section">
+      <h3>Overview</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px">Work through the tabs in order: <strong>Staff → Opening → POS → Restock (if needed) → Closing → Cashout</strong>. The step bar at the top is always visible — tap any step to jump to it.</p>
+    </div>
+
+    <div class="manual-section">
+      <h3>1 · Staff — Start of Shift</h3>
+      <div class="manual-step"><div class="manual-num">1</div><div class="manual-step-body"><strong>Confirm your name, date and start time</strong><p>Your name is pre-filled from your login. Make sure the date and time are correct.</p></div></div>
+      <div class="manual-step"><div class="manual-num">2</div><div class="manual-step-body"><strong>Enter cash float received from Clubhouse</strong><p>Enter the dollar amount of the cash float you received. This is tracked separately and returned to the manager at the end of your shift — it does not go into the safe envelope.</p></div></div>
+      <div class="manual-step"><div class="manual-num">3</div><div class="manual-step-body"><strong>Check off your supplies</strong><p>Confirm you have everything — Moneris machine, shooter cups, napkins, etc.</p></div></div>
+      <div class="manual-step"><div class="manual-num">4</div><div class="manual-step-body"><strong>Tap "Next — Opening inventory →"</strong><p>Saves your shift details and moves to the opening count.</p></div></div>
+    </div>
+
+    <div class="manual-section">
+      <h3>2 · Opening — Count Your Stock</h3>
+      <div class="manual-step"><div class="manual-num">1</div><div class="manual-step-body"><strong>Count packaged goods</strong><p>For each item, enter the quantity on hand using the +/− buttons, or tap the number to type it directly with the keypad.</p></div></div>
+      <div class="manual-step"><div class="manual-num">2</div><div class="manual-step-body"><strong>Weigh liquor bottles</strong><p>Place each bottle on a scale and enter the weight in grams in the opening weight field.</p></div></div>
+      <div class="manual-step"><div class="manual-num">3</div><div class="manual-step-body"><strong>Tap "Confirm & lock opening stock"</strong><p>Locks your counts and takes you straight to the POS to start taking orders. Opening counts cannot be changed after this point.</p></div></div>
+    </div>
+
+    <div class="manual-section">
+      <h3>POS — Taking Orders</h3>
+      <div class="manual-step"><div class="manual-num">1</div><div class="manual-step-body"><strong>Tap "+ New Order"</strong><p>Opens the order builder. Tap any item to add it. Tap again to increase the quantity. The number in the corner shows how many are left in stock.</p></div></div>
+      <div class="manual-tip">Only items that were included in your opening count — plus anything added during a restock — will appear as available in the POS. If something isn't showing as available, it wasn't counted at opening or hasn't been restocked yet.</div>
+      <div class="manual-step"><div class="manual-num">2</div><div class="manual-step-body"><strong>Tap "Charge" to take payment</strong><p>Select Card, Cash, or Lucky Bucks. You can combine multiple payment methods on one order — just add each one and the balance updates automatically.</p></div></div>
+      <div class="manual-step"><div class="manual-num">3</div><div class="manual-step-body"><strong>Card payment</strong><p>A keypad appears. Enter the total amount shown on the Moneris terminal including any tip. The app calculates the tip for you.</p></div></div>
+      <div class="manual-step"><div class="manual-num">4</div><div class="manual-step-body"><strong>Cash payment</strong><p>Enter the amount received from the customer. Change given, tip, and amount applied to the bill are all calculated automatically.</p></div></div>
+      <div class="manual-step"><div class="manual-num">5</div><div class="manual-step-body"><strong>Lucky Bucks</strong><p>Tap + to enter the number of Lucky Bucks certificates. Each is worth $5.00. Lucky Bucks collected go into the cash envelope at the end of the shift.</p></div></div>
+      <div class="manual-step"><div class="manual-num">6</div><div class="manual-step-body"><strong>Tap "Confirm payment"</strong><p>Once the balance is $0.00, confirm the payment. The order is saved and you return to the POS home screen.</p></div></div>
+      <div class="manual-step"><div class="manual-num">7</div><div class="manual-step-body"><strong>Editing an order</strong><p>Tap "Edit order" on any completed order to change items or payment details. The original payment info is pre-loaded so you only change what's needed.</p></div></div>
+    </div>
+
+    <div class="manual-section">
+      <h3>3 · Restock — Mid-Shift Top-Up</h3>
+      <div class="manual-step"><div class="manual-num">1</div><div class="manual-step-body"><strong>Tap "3 · Restock" in the step bar</strong><p>Go here any time you pick up more stock from the Clubhouse during your shift.</p></div></div>
+      <div class="manual-step"><div class="manual-num">2</div><div class="manual-step-body"><strong>Enter quantities being added</strong><p>Enter only the new quantities you are adding — not your total on hand.</p></div></div>
+      <div class="manual-step"><div class="manual-num">3</div><div class="manual-step-body"><strong>Tap "✓ Confirm restock"</strong><p>Locks the restock round and returns you to the POS. You can do up to 10 restock rounds per shift.</p></div></div>
+      <div class="manual-tip">⚠ Always tap <strong>Confirm restock</strong> — not "Skip to closing count". If you skip without confirming, those items won't be counted in your reconciliation and won't be available for sale in the POS module.</div>
+    </div>
+
+    <div class="manual-section">
+      <h3>4 · Closing — End of Shift Count</h3>
+      <div class="manual-step"><div class="manual-num">1</div><div class="manual-step-body"><strong>Count remaining packaged goods</strong><p>Enter the quantity of each item left at the end of your shift.</p></div></div>
+      <div class="manual-step"><div class="manual-num">2</div><div class="manual-step-body"><strong>Weigh remaining liquor bottles</strong><p>Weigh each bottle and enter the closing weight in grams. If a bottle is completely empty, check the "Empty" checkbox.</p></div></div>
+      <div class="manual-step"><div class="manual-num">3</div><div class="manual-step-body"><strong>Tap "Calculate & cashout →"</strong><p>Locks your closing counts and takes you to the Cashout tab with the full reconciliation calculated.</p></div></div>
+    </div>
+
+    <div class="manual-section">
+      <h3>5 · Cashout — End of Shift Report</h3>
+      <div class="manual-step"><div class="manual-num">1</div><div class="manual-step-body"><strong>Enter total card payments from Moneris</strong><p>Enter the total amount from your Moneris terminal report — the full amount charged including tips.</p></div></div>
+      <div class="manual-step"><div class="manual-num">2</div><div class="manual-step-body"><strong>Review the reconciliation</strong><p>The app calculates how much cash is due back to the club. If card and Lucky Bucks payments exceeded revenues, the balance will be paid out the following week through the tip-out process.</p></div></div>
+      <div class="manual-step"><div class="manual-num">3</div><div class="manual-step-body"><strong>Prepare your cash envelope</strong><p>Place the net cash amount (rounded to nearest dollar) plus any Lucky Bucks certificates into the safe envelope and drop it in the safe.</p></div></div>
+      <div class="manual-step"><div class="manual-num">4</div><div class="manual-step-body"><strong>Return the cash float</strong><p>Return the cash float to the manager separately — it does not go in the safe envelope.</p></div></div>
+      <div class="manual-step"><div class="manual-num">5</div><div class="manual-step-body"><strong>Sign and send the report</strong><p>Draw your signature in the box at the bottom of the page, then tap "Send report". The report is emailed automatically to management and to your registered email. You must sign before the Send button becomes active.</p></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function openManual(){ $('manualOverlay').classList.add('open'); $('manualOverlay').scrollTop=0; }
+function closeManual(){ $('manualOverlay').classList.remove('open'); }
+</script>
 </body>
 </html>
