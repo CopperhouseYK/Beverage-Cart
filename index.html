@@ -650,6 +650,7 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
       <div class="admin-tab"        id="atab-products" onclick="switchAdminTab('products')">Products</div>
       <div class="admin-tab"        id="atab-liquor"   onclick="switchAdminTab('liquor')">Liquor</div>
       <div class="admin-tab"        id="atab-supplies" onclick="switchAdminTab('supplies')">Supplies</div>
+      <div class="admin-tab"        id="atab-refresh"  onclick="switchAdminTab('refresh')">Refresh</div>
     </div>
     <div class="admin-body">
       <!-- ── USERS TAB ── -->
@@ -686,6 +687,27 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
           </div>
         </div>
       </div>
+      <!-- ── REFRESH TAB ── -->
+      <div class="admin-tab-panel" id="apanel-refresh">
+        <h3 style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px">Refresh / New Shift Password</h3>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">
+          The refresh password is used to clear all current shift data and start a new shift. It is separate from the admin password so you can share it with staff during testing — or with a trusted staff member at end of shift — without granting full admin access.
+        </p>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Current refresh password</label>
+          <input type="text" id="refreshPwDisplay" value="Refresh123" readonly
+            style="width:100%;font-family:'DM Mono',monospace;font-size:15px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:white;color:var(--ink);box-sizing:border-box">
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px">
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Set new refresh password</label>
+          <input type="text" id="newRefreshPw" placeholder="Enter new password"
+            style="width:100%;font-family:'DM Mono',monospace;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:10px;box-sizing:border-box"
+            autocomplete="off" autocapitalize="none">
+          <button class="btn-primary" style="margin-top:0" onclick="saveRefreshPassword()">Update refresh password</button>
+        </div>
+        <div id="refreshPwStatus" style="display:none;margin-top:10px;font-size:13px;color:var(--green);font-weight:500"></div>
+      </div>
+
       <!-- ── SUPPLIES TAB ── -->
       <div class="admin-tab-panel" id="apanel-supplies">
         <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px">
@@ -1066,6 +1088,8 @@ const GH_FILE   = 'settings.json';
 const GH_TOKEN = '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';
 const FIXED_TO     = ['accounting@copperhouse.ca', 'manager@copperhouse.ca'];
 const ADMIN_PASS   = 'Admin123';
+// Refresh password — used to clear shift data. Separate from admin password.
+let REFRESH_PASS = 'Refresh123';
 
 // ── Passwords stored and compared as plain text ──────────────────────────
 // No hashing — passwords are visible and editable in the admin panel.
@@ -1164,10 +1188,20 @@ function openNewShiftModal(){
 function closeNewShiftModal(){
   $('newShiftModal').classList.remove('open');
 }
+function saveRefreshPassword(){
+  const pw = ($('newRefreshPw').value||'').trim();
+  if(!pw){ alert('Please enter a password.'); return; }
+  REFRESH_PASS = pw;
+  $('newRefreshPw').value = '';
+  const rpd=$('refreshPwDisplay'); if(rpd) rpd.value=pw;
+  const status=$('refreshPwStatus');
+  if(status){ status.textContent='✓ Refresh password updated'; status.style.display='block'; setTimeout(()=>status.style.display='none',3000); }
+  pushSettingsToGitHub();
+  autosave();
+}
+
 function confirmNewShift(){
-  const adminUser = USERS.find(u=>u.id==='u0');
-  const adminPw   = (adminUser && adminUser.password) ? adminUser.password : ADMIN_PASS;
-  if(($('newShiftPw').value||'').trim()!==adminPw){
+  if(($('newShiftPw').value||'').trim()!==REFRESH_PASS){
     $('newShiftError').style.display='block';
     $('newShiftPw').value=''; $('newShiftPw').focus();
     return;
@@ -1236,9 +1270,10 @@ async function fetchSettingsFromGitHub(){
     const data = await resp.json();
     const settings = JSON.parse(atob(data.content.replace(/\n/g,'')));
     // Apply fetched settings
-    if(settings.PRODUCTS) PRODUCTS = settings.PRODUCTS;
-    if(settings.LIQUOR)   LIQUOR   = settings.LIQUOR;
-    if(settings.SUPPLIES) SUPPLIES = settings.SUPPLIES;
+    if(settings.PRODUCTS)     PRODUCTS     = settings.PRODUCTS;
+    if(settings.LIQUOR)       LIQUOR       = settings.LIQUOR;
+    if(settings.SUPPLIES)     SUPPLIES     = settings.SUPPLIES;
+    if(settings.REFRESH_PASS) REFRESH_PASS = settings.REFRESH_PASS;
     if(settings.USERS){
       // Merge: preserve passwords for existing users, add new ones
       settings.USERS.forEach(u => {
@@ -1274,7 +1309,7 @@ async function pushSettingsToGitHub(){
     version: 1,
     updatedAt: new Date().toISOString(),
     updatedBy: currentUser ? currentUser.email : 'unknown',
-    PRODUCTS, LIQUOR, SUPPLIES, USERS
+    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS
   };
   const body = JSON.stringify(settings, null, 2);
   const encoded = btoa(unescape(encodeURIComponent(body)));
@@ -1320,7 +1355,7 @@ function exportSettings(){
   const settings={
     version:1,
     exportedAt: new Date().toISOString(),
-    PRODUCTS, LIQUOR, SUPPLIES, USERS
+    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS
   };
   const blob=new Blob([JSON.stringify(settings,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -2747,6 +2782,7 @@ function openAdmin(){
     supplies:[...SUPPLIES],
     users:JSON.parse(JSON.stringify(USERS))  // always fresh from live USERS
   };
+  const rpd=$('refreshPwDisplay'); if(rpd) rpd.value=REFRESH_PASS;
   renderAdmin();
   $('adminOverlay').classList.add('open');
   document.body.style.overflow='hidden';
@@ -3907,6 +3943,7 @@ function saveState() {
   const state = {
     savedAt:        new Date().toISOString(),
     shiftDate:      ($('shiftDate')||{}).value || '',
+    refreshPass:    REFRESH_PASS,
     // currentUser not saved — fresh login required each session
     users:          USERS, // persist hashed user list
     // Step progress
@@ -3970,6 +4007,7 @@ async function restoreState(state) {
   // Restore opening lock
   openingLocked      = state.openingLocked      || false;
   closingSubmitted   = state.closingSubmitted   || false;
+  if(state.refreshPass) REFRESH_PASS = state.refreshPass;
   openingCounts  = state.openingCounts  || {};
   restockCounts  = state.restockCounts  || {};
 
