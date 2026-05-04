@@ -3906,7 +3906,7 @@ function saveState() {
   const state = {
     savedAt:        new Date().toISOString(),
     shiftDate:      ($('shiftDate')||{}).value || '',
-    currentUser:    currentUser,
+    // currentUser not saved — fresh login required each session
     users:          USERS, // persist hashed user list
     // Step progress
     openingLocked:     openingLocked,
@@ -3952,14 +3952,8 @@ async function restoreState(state) {
   if (state.users && state.users.length > 0) USERS = state.users;
   initDefaultUsers(); // ensure canonical admin always exists (now sync)
 
-  // Restore user session
-  if (state.currentUser) {
-    // Re-hydrate from the live USERS array so initDefaultUsers corrections are reflected.
-    const live = USERS.find(u => u.id === state.currentUser.id);
-    currentUser = live || state.currentUser;
-    $('loginScreen').classList.add('hidden');
-    $('staffName').value = currentUser.fullName || currentUser.username || '';
-  }
+  // User session intentionally NOT restored — fresh login required every session
+  currentUser = null;
 
   // Restore shift metadata
   if (state.shiftDate) $('shiftDate').value = state.shiftDate;
