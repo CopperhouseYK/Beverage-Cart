@@ -2524,15 +2524,6 @@ ${'─'.repeat(52)}
   btn.disabled=true; btn.textContent='Sending…';
   showStatus('info','Sending report…');
 
-  if(EJS_KEY==='-5GXP4lit3bxVvDR_'){
-    setTimeout(()=>{
-      btn.disabled=false;
-      btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send report`;
-      showStatus('info',`⚠ EmailJS not yet configured — see setup note.\n\nSubject: ${emailSubject}\nTo: ${allTo.join(', ')}\n\n${body}`);
-    },600);
-    return;
-  }
-
   try{
     emailjs.init(EJS_KEY);
     const to=[...FIXED_TO];
@@ -3912,7 +3903,6 @@ ${'─'.repeat(44)}
 Thank you for your purchase!
 The Swinger's Club Golf Course`;
 
-  if(EJS_KEY==='-5GXP4lit3bxVvDR_') return; // silent skip in demo mode
   try{
     emailjs.init(EJS_KEY);
     await emailjs.send(EJS_SERVICE, EJS_TEMPLATE,{
