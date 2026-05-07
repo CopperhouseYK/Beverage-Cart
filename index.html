@@ -2344,19 +2344,6 @@ function buildSummary() {
     const staffEmail = currentUser ? (currentUser.email||'') : '';
     recipEl.innerHTML = `manager@copperhouse.ca<br>accounting@copperhouse.ca${staffEmail ? '<br>'+staffEmail : ''}`;
   }
-
-  if(EJS_KEY==='-5GXP4lit3bxVvDR_'){
-    $('setupNote').style.display='block';
-    $('setupNote').innerHTML=`<div class="setup-note">
-      <strong>📧 One-time EmailJS setup required (free, ~5 min)</strong>
-      1. Create a free account at <a href="https://emailjs.com" target="_blank">emailjs.com</a><br>
-      2. Add an email service (Gmail works great) under "Email Services"<br>
-      3. Create a template — put <code>{{report_body}}</code> in the body, <code>{{to_emails}}</code> in the To field<br>
-      4. Paste your <strong>Service ID</strong>, <strong>Template ID</strong>, and <strong>Public Key</strong> into the three constants at the top of the &lt;script&gt; block<br>
-      5. Done — the Send button will email the full summary automatically.<br>
-      <em>Until configured, Send shows a preview of the email content.</em>
-    </div>`;
-  }
 }
 
 function recalc(){
