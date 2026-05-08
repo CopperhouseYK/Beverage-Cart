@@ -1,0 +1,316 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-08T16:04:04.355Z",
+  "updatedBy": "accounting@copperhouse.ca",
+  "PRODUCTS": [
+    {
+      "group": "Alcoholic Drinks",
+      "on": true,
+      "items": [
+        {
+          "name": "Kokanee (can)",
+          "price": 7.5,
+          "on": true
+        },
+        {
+          "name": "Budweiser (can)",
+          "price": 7.5,
+          "on": true
+        },
+        {
+          "name": "Coors Light (can)",
+          "price": 7.5,
+          "on": true
+        },
+        {
+          "name": "Alexander Keith's (can)",
+          "price": 7.5,
+          "on": true
+        },
+        {
+          "name": "Corona Extra (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "Bud Light Tall (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "Mott's Clamato Caesar (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "Strongbow Cider (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "Twisted Tea (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "White Claw (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "Ole (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "Dillon's Gin Cocktail (can)",
+          "price": 10,
+          "on": true
+        },
+        {
+          "name": "NWT Brewing Tee Time (can)",
+          "price": 10,
+          "on": true
+        }
+      ]
+    },
+    {
+      "group": "Non-Alcoholic",
+      "on": true,
+      "items": [
+        {
+          "name": "Water (bottle)",
+          "price": 3,
+          "on": true
+        },
+        {
+          "name": "Gatorade Orange (bottle)",
+          "price": 4.5,
+          "on": true
+        },
+        {
+          "name": "Gatorade Red (bottle)",
+          "price": 4.5,
+          "on": true
+        },
+        {
+          "name": "Gatorade Blue (bottle)",
+          "price": 4.5,
+          "on": true
+        },
+        {
+          "name": "Gatorade Yellow (bottle)",
+          "price": 4.5,
+          "on": true
+        },
+        {
+          "name": "Gatorade Purple (bottle)",
+          "price": 4.5,
+          "on": true
+        },
+        {
+          "name": "Pepsi (bottle)",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Diet Pepsi (bottle)",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Ginger Ale (bottle)",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Iced Tea (bottle)",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Diet Pepsi (mini can)",
+          "price": 2.5,
+          "on": true
+        },
+        {
+          "name": "Pepsi (mini can)",
+          "price": 2.5,
+          "on": true
+        },
+        {
+          "name": "Test item",
+          "price": 1,
+          "on": true
+        }
+      ]
+    },
+    {
+      "group": "Snacks & Food",
+      "on": true,
+      "items": [
+        {
+          "name": "Oh Henry! Bar",
+          "price": 3,
+          "on": true
+        },
+        {
+          "name": "Mars Bar",
+          "price": 3,
+          "on": true
+        },
+        {
+          "name": "KitKat Bar",
+          "price": 3,
+          "on": true
+        },
+        {
+          "name": "Snickers Bar",
+          "price": 3,
+          "on": true
+        },
+        {
+          "name": "Lay's Classic",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Lay's Salt & Vinegar",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Lay's Barbecue",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Doritos Nachos",
+          "price": 4,
+          "on": true
+        },
+        {
+          "name": "Assorted Sandwiches",
+          "price": 12,
+          "on": true
+        }
+      ]
+    }
+  ],
+  "LIQUOR": [
+    {
+      "name": "Sourpuss Raspberry",
+      "price": 6,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 780,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Sambuca",
+      "price": 6,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 900,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Jose Cuervo Gold",
+      "price": 6,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1010,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Fireball Cinnamon Whisky",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1180,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Jägermeister",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1200,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Captain Morgan's White",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 980,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Captain Morgan's Spiced",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 980,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Smirnoff Vodka",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 960,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Bailey's Irish Cream",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1100,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Patrón Silver",
+      "price": 8,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1260,
+      "emptyWeight": 0
+    }
+  ],
+  "SUPPLIES": [
+    "Moneris payment machine",
+    "Extra Moneris paper rolls",
+    "Shooter cups",
+    "Solo cups",
+    "Napkins"
+  ],
+  "USERS": [
+    {
+      "id": "u0",
+      "fullName": "Administrator",
+      "email": "accounting@copperhouse.ca",
+      "phone": "",
+      "password": "CH484rlr!@#$",
+      "active": true
+    },
+    {
+      "id": "u1",
+      "fullName": "Paul Henry",
+      "email": "paul@h2-solutions.ca",
+      "phone": "(867) 446-4357",
+      "password": "PH4357",
+      "active": true
+    },
+    {
+      "id": "u1777874167936",
+      "fullName": "Chloe Hoechsmann",
+      "email": "chloe.hoechsmann@gmail.com",
+      "phone": "(778) 679-1823",
+      "password": "CH1823",
+      "active": true
+    }
+  ],
+  "REFRESH_PASS": "Refresh123"
+}
