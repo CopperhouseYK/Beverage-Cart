@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-08T16:04:04.355Z",
+  "updatedAt": "2026-05-08T16:07:54.722Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -137,11 +137,6 @@
           "name": "Pepsi (mini can)",
           "price": 2.5,
           "on": true
-        },
-        {
-          "name": "Test item",
-          "price": 1,
-          "on": true
         }
       ]
     },
@@ -231,7 +226,7 @@
       "emptyWeight": 0
     },
     {
-      "name": "Jägermeister",
+      "name": "JÃ¤germeister",
       "price": 7,
       "on": true,
       "bottleSizeMl": 750,
@@ -271,7 +266,7 @@
       "emptyWeight": 0
     },
     {
-      "name": "Patrón Silver",
+      "name": "PatrÃ³n Silver",
       "price": 8,
       "on": true,
       "bottleSizeMl": 750,
