@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- force redeploy 2026-05-07 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1086,7 +1085,7 @@ const GH_FILE   = 'settings.json';
 // Generate a fine-grained GitHub token at:
 // github.com/settings/personal-access-tokens/new
 // Permissions needed: Contents → Read and Write on this repo only.
-const WORKER_URL = 'https://beverage-cart-sync.accounting-0d6.workers.dev';
+const GH_TOKEN = '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';
 const FIXED_TO     = ['accounting@copperhouse.ca', 'manager@copperhouse.ca'];
 const ADMIN_PASS   = 'Admin123';
 // Refresh password — used to clear shift data. Separate from admin password.
@@ -1237,7 +1236,7 @@ function openSettingsModal(){
   // Show GitHub sync status
   const lbl = $('ghSyncLabel');
   if(lbl){
-    if(!WORKER_URL){
+    if(!GH_TOKEN){
       lbl.textContent = '⚠ Not configured';
       lbl.style.color = 'var(--amber)';
     } else {
@@ -1252,9 +1251,15 @@ function closeSettingsModal(){ $('settingsModal').classList.remove('open'); }
 
 // Fetch settings.json from GitHub and apply to app
 async function fetchSettingsFromGitHub(){
-  if(!WORKER_URL) return;
+  if(!GH_TOKEN) return; // not configured
   try {
-    const resp = await fetch(WORKER_URL, { method: 'GET' });
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+    const resp = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
     if(!resp.ok) {
       if(resp.status === 404) {
         console.log('settings.json not found on GitHub yet — will create on first admin save');
@@ -1264,11 +1269,13 @@ async function fetchSettingsFromGitHub(){
     }
     const data = await resp.json();
     const settings = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    // Apply fetched settings
     if(settings.PRODUCTS)     PRODUCTS     = settings.PRODUCTS;
     if(settings.LIQUOR)       LIQUOR       = settings.LIQUOR;
     if(settings.SUPPLIES)     SUPPLIES     = settings.SUPPLIES;
     if(settings.REFRESH_PASS) REFRESH_PASS = settings.REFRESH_PASS;
     if(settings.USERS){
+      // Merge: preserve passwords for existing users, add new ones
       settings.USERS.forEach(u => {
         const existing = USERS.find(x => x.email.toLowerCase() === u.email.toLowerCase());
         if(!existing) USERS.push(u);
@@ -1276,25 +1283,28 @@ async function fetchSettingsFromGitHub(){
           existing.fullName = u.fullName;
           existing.phone    = u.phone;
           existing.active   = u.active;
-          existing.password = u.password;
+          existing.password = u.password; // sync password changes from admin
         }
       });
+      // Remove users that were deleted in admin (not in fetched list)
+      // Keep u0 always
       const fetchedEmails = settings.USERS.map(u => u.email.toLowerCase());
       USERS = USERS.filter(u => u.id === 'u0' || fetchedEmails.includes(u.email.toLowerCase()));
     }
+    // Re-render everything with new settings
     renderInv('openingGroups','open');
     renderInv('closingGroups','close');
     renderSuppliesChecklist();
     renderPosHome();
-    console.log('✓ Settings loaded via Worker');
+    console.log('✓ Settings loaded from GitHub');
   } catch(err) {
-    console.warn('Could not load settings:', err.message);
+    console.warn('Could not load settings from GitHub:', err.message);
   }
 }
 
 // Push current settings to GitHub as settings.json
 async function pushSettingsToGitHub(){
-  if(!WORKER_URL) return;
+  if(!GH_TOKEN) return; // not configured
   const settings = {
     version: 1,
     updatedAt: new Date().toISOString(),
@@ -1303,16 +1313,29 @@ async function pushSettingsToGitHub(){
   };
   const body = JSON.stringify(settings, null, 2);
   const encoded = btoa(unescape(encodeURIComponent(body)));
+
   try {
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+    // Get current file SHA (required for updates)
     let sha = null;
-    const getResp = await fetch(WORKER_URL, { method: 'GET' });
+    const getResp = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
     if(getResp.ok) {
       const existing = await getResp.json();
       sha = existing.sha;
     }
-    const putResp = await fetch(WORKER_URL, {
+    // Push the updated file
+    const putResp = await fetch(url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `token ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         message: `Settings updated by ${currentUser ? currentUser.fullName : 'admin'} — ${new Date().toLocaleString()}`,
         content: encoded,
@@ -1320,13 +1343,14 @@ async function pushSettingsToGitHub(){
       })
     });
     if(!putResp.ok) throw new Error(`GitHub push failed: ${putResp.status}`);
-    console.log('✓ Settings saved via Worker');
+    console.log('✓ Settings saved to GitHub');
     return true;
   } catch(err) {
-    console.warn('Could not save settings:', err.message);
+    console.warn('Could not save settings to GitHub:', err.message);
     return false;
   }
 }
+
 function exportSettings(){
   const settings={
     version:1,
@@ -2319,6 +2343,19 @@ function buildSummary() {
     const staffEmail = currentUser ? (currentUser.email||'') : '';
     recipEl.innerHTML = `manager@copperhouse.ca<br>accounting@copperhouse.ca${staffEmail ? '<br>'+staffEmail : ''}`;
   }
+
+  if(EJS_KEY==='-5GXP4lit3bxVvDR_'){
+    $('setupNote').style.display='block';
+    $('setupNote').innerHTML=`<div class="setup-note">
+      <strong>📧 One-time EmailJS setup required (free, ~5 min)</strong>
+      1. Create a free account at <a href="https://emailjs.com" target="_blank">emailjs.com</a><br>
+      2. Add an email service (Gmail works great) under "Email Services"<br>
+      3. Create a template — put <code>{{report_body}}</code> in the body, <code>{{to_emails}}</code> in the To field<br>
+      4. Paste your <strong>Service ID</strong>, <strong>Template ID</strong>, and <strong>Public Key</strong> into the three constants at the top of the &lt;script&gt; block<br>
+      5. Done — the Send button will email the full summary automatically.<br>
+      <em>Until configured, Send shows a preview of the email content.</em>
+    </div>`;
+  }
 }
 
 function recalc(){
@@ -2433,11 +2470,37 @@ async function sendReport(){
   const staffProfileEmail = currentUser ? (currentUser.email||'') : '';
   const sEmail = staffProfileEmail;
 
+  // ── 1) STAFF TAB info ───────────────────────────────────────────────────
+  const cashFloat = sd.cashFloat || 0;
+
+  // ── Sales lines (also used in Cashout summary) ────────────────────
   const itemsText=sd.itemLines.map(l=>`  ${l.name.padEnd(32)} x${String(l.qty).padStart(2)}  $${l.subtotal.toFixed(2)}`).join('\n');
   const liqText=sd.liqLines.map(l=>`  ${l.name.padEnd(32)} ${l.totalOz}oz  $${(l.totalOz*l.price).toFixed(2)}`).join('\n');
   const posSoldMap = getPosActualSold();
 
-  // Build recon text for email
+  // ── 2) CASHOUT TAB reconciliation values ───────────────────────
+  const luckyApplied = posOrders.reduce((s,o)=>s+(o.payments||[]).filter(p=>p.type==='lucky').reduce((a,p)=>a+p.amount,0),0);
+  const luckyBucksCertCount = posOrders.reduce((s,o)=>s+(o.luckyBucks||0),0);
+  const netStockVal   = sd.netStockVal   || 0;
+  const netStockGst   = sd.netStockGst   || 0;
+  const netStockTotal = sd.netStockTotal || 0;
+  const netCash       = netStockTotal - mTotal - luckyApplied;
+  const cashToSubmit  = Math.max(0, Math.round(netCash));
+
+  // POS sales by payment type
+  const cardSales  = posOrders.reduce((s,o)=>s+(o.payments?.filter(p=>p.type==='card' ).reduce((a,p)=>a+p.amount,0)||0),0);
+  const cashSales  = posOrders.reduce((s,o)=>s+(o.payments?.filter(p=>p.type==='cash' ).reduce((a,p)=>a+p.amount,0)||0),0);
+  const luckySales = posOrders.reduce((s,o)=>s+(o.payments?.filter(p=>p.type==='lucky').reduce((a,p)=>a+p.amount,0)||0),0);
+
+  // Tips
+  const cardTipsPos  = posOrders.reduce((s,o)=>s+(o.cardTip ||0),0);
+  const cashTips     = posOrders.reduce((s,o)=>s+(o.cashTip ||0),0);
+  const luckyTips    = posOrders.reduce((s,o)=>s+(o.luckyTip||0),0);
+  const cardTipsShown = Math.max(cardTipsPos, mTips - cashTips - luckyTips);
+  const totalTips     = Math.max(cardTipsPos+cashTips+luckyTips, mTips);
+
+  // ── 3) REPORTING TAB — full inventory reconciliation ──────────────────
+  // Packaged goods rows
   const reconRows = [];
   activeProd().forEach((grp,gi)=>{
     grp.items.filter(x=>x.on).forEach((item,ii)=>{
@@ -2454,34 +2517,99 @@ async function sendReport(){
       reconRows.push(`  ${item.name.padEnd(30)}  Open:${String(opening).padStart(3)}  Restock:${String(totalRestock).padStart(3)}  Avail:${String(subtotal).padStart(3)}  End:${String(closing).padStart(3)}  Theo:${typeof theo==='number'?String(theo).padStart(3):'  —'}  POS:${String(actual).padStart(3)}  Var:${typeof variance==='number'?(variance>=0?'+':'')+variance:'—'}`);
     });
   });
-  const reconText = reconRows.length
-    ? '\n\nRECONCILIATION\n'+('─'.repeat(52))+'\n'+reconRows.join('\n')
-    : '';
+
+  // Liquor reconciliation rows
+  const liqReconRows = [];
+  const posShotsSold = {};
+  posOrders.forEach(o=>o.items.forEach(i=>{
+    if(i.isLiq){ const k=posItemKey(i.name+'_shot'); posShotsSold[k]=(posShotsSold[k]||0)+i.qty; }
+  }));
+  const liqSoldData = getAllLiqSold();
+  activeLiq().forEach(l=>{
+    const globalLi = LIQUOR.indexOf(l);
+    const openBottles = selectedLiquor.filter(e=>e.liqIndex===globalLi);
+    const openOz = openBottles.reduce((s,b)=>s+Math.max(0,(b.openW-liqEmptyWeight(l))/30),0);
+    let totalRestockOz = 0;
+    Object.entries(restockLiquor).forEach(([n,bottles])=>{
+      bottles.forEach(b=>{
+        if(b.liqIndex===globalLi)
+          totalRestockOz += Math.max(0,(b.openW-liqEmptyWeight(l))/30);
+      });
+    });
+    const subtotalOz = openOz + totalRestockOz;
+    const shotKey = posItemKey(l.name+'_shot');
+    const actualSoldShots = posShotsSold[shotKey] || 0;
+    if(subtotalOz<0.01 && !actualSoldShots) return;
+    const consumed = liqSoldData.find(s=>s.name===l.name);
+    const theoOz = consumed ? consumed.totalOz : 0;
+    const endOz  = Math.max(0, subtotalOz - theoOz);
+    const variance = closingSubmitted ? (actualSoldShots - theoOz) : '—';
+    liqReconRows.push(`  ${l.name.padEnd(28)}  Open:${openOz.toFixed(1).padStart(5)}oz  Restock:${totalRestockOz.toFixed(1).padStart(5)}oz  Avail:${subtotalOz.toFixed(1).padStart(5)}oz  End:${endOz.toFixed(1).padStart(5)}oz  Sold:${theoOz.toFixed(1).padStart(5)}oz  POS:${String(actualSoldShots).padStart(3)}  Var:${typeof variance==='number'?(variance>=0?'+':'')+variance.toFixed(1):'—'}`);
+  });
 
   const body=`BEVERAGE CART DAILY REPORT — The Swinger's Club
-${'='.repeat(52)}
-Staff:       ${sd.name}
-Date:        ${sd.dateS}
-Start:       ${sd.startT}
-End:         ${sd.endT}
+${'='.repeat(60)}
 
-SALES
-${'─'.repeat(52)}
+═══ STAFF / SHIFT INFO  (Staff tab) ═══
+${'─'.repeat(60)}
+Staff:               ${sd.name}
+Date:                ${sd.dateS}
+Start time:          ${sd.startT}
+End time:            ${sd.endT}
+Cash float received: $${cashFloat.toFixed(2)}
+
+═══ SALES BREAKDOWN ═══
+${'─'.repeat(60)}
 ${itemsText||'  (no packaged items sold)'}
 ${liqText?'\nLIQUOR / SHOTS\n'+liqText:''}
 
-Subtotal:    $${sd.sub.toFixed(2)}
-GST (5%):    $${sd.gst.toFixed(2)}
+Subtotal:            $${sd.sub.toFixed(2)}
+GST (5%):            $${sd.gst.toFixed(2)}
 ${'─'.repeat(30)}
-(A) TOTAL:   $${sd.total.toFixed(2)}
+(A) TOTAL SALES:     $${sd.total.toFixed(2)}
 
-RECONCILIATION
-${'─'.repeat(52)}
-(A) Total sales:                  $${sd.total.toFixed(2)}
-(B) Moneris total (incl. tips):  -$${mTotal.toFixed(2)}
-(D) Tips included in (B):         $${mTips.toFixed(2)}
-(B−D) Moneris card sales only:    $${mCard.toFixed(2)}
-(C) Cash to submit:               $${cash}.00${reconText}`;
+═══ POS ORDER SUMMARY ═══
+${'─'.repeat(60)}
+Total orders:        ${posOrders.length}
+Card sales:          $${cardSales.toFixed(2)}
+Cash sales:          $${cashSales.toFixed(2)}
+Lucky Bucks applied: $${luckySales.toFixed(2)}  (${luckyBucksCertCount} cert.)
+
+═══ CASHOUT RECONCILIATION  (Cashout tab) ═══
+${'─'.repeat(60)}
+(A) Total sales:                          $${sd.total.toFixed(2)}
+(B) Moneris total (incl. tips):           $${mTotal.toFixed(2)}
+(D) Tips included in (B):                 $${mTips.toFixed(2)}
+(B−D) Card sales only:                    $${mCard.toFixed(2)}
+
+Value of net stock received:              $${netStockVal.toFixed(2)}
+Add: GST (5%):                            $${netStockGst.toFixed(2)}
+Subtotal:                                 $${netStockTotal.toFixed(2)}
+Less: card payments incl. tips:          -$${mTotal.toFixed(2)}
+Less: Lucky Bucks received:              -$${luckyApplied.toFixed(2)}
+${'─'.repeat(60)}
+Net cash due back:                        $${netCash.toFixed(2)}
+(C) Cash to submit (rounded):             $${cashToSubmit}.00
+Cash float (return to manager separately):$${cashFloat.toFixed(2)}
+
+═══ TIPS RECEIVED ═══
+${'─'.repeat(60)}
+Card tips:                                $${cardTipsShown.toFixed(2)}
+Cash tips:                                $${cashTips.toFixed(2)}
+Lucky Bucks tips:                         $${luckyTips.toFixed(2)}
+Total tips received:                      $${totalTips.toFixed(2)}
+
+═══ INVENTORY RECONCILIATION  (Reporting tab) ═══
+${'─'.repeat(60)}
+${closingSubmitted ? 'Variance = Actual POS − Theoretical sold' : '⚠ Closing count not submitted — variance suppressed'}
+
+PACKAGED GOODS
+${reconRows.length ? reconRows.join('\n') : '  (no packaged items)'}
+${liqReconRows.length ? '\nLIQUOR / SPIRITS\n'+liqReconRows.join('\n') : ''}
+
+${'='.repeat(60)}
+Report generated: ${new Date().toLocaleString('en-CA')}
+The Swinger's Club Golf Course`;
 
   const btn=$('sendBtn');
   btn.disabled=true; btn.textContent='Sending…';
@@ -3838,30 +3966,54 @@ async function sendReceipt(order, email){
     ? new Date($('shiftDate').value+'T12:00:00').toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})
     : new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
 
-  const lines=order.items.map(i=>`  ${i.qty}× ${i.name}${i.isLiq?' (shot)':''}  ${fmtMoney(i.price*i.qty)}`).join('\n');
-  const paymentLines = order.payments
-    ? order.payments.map(p=>{
-        if(p.type==='lucky') return `Lucky Bucks (${p.luckyCount}× $5)  ${fmtMoney(p.amount)}`;
-        if(p.type==='card')  return `Card               ${fmtMoney(p.amount)}`;
-        return                      `Cash               ${fmtMoney(p.amount)}`;
-      }).join('\n')
-    : `${order.method==='card'?'Card':'Cash'}  ${fmtMoney(order.total)}`;
-  const tipLine=order.tip>0?`\nTip       ${fmtMoney(order.tip)}`:'';
-  const body=`RECEIPT — The Swinger's Club Beverage Cart
-${'─'.repeat(44)}
-Date:    ${date}
-Time:    ${order.time}
-Order:   #${order.id+1}
+  // Item lines: qty, name, unit price, line total
+  const lines=order.items.map(i=>{
+    const liqTag = i.isLiq ? ' (shot)' : '';
+    const nameStr = (i.name+liqTag);
+    const lineTotal = i.price*i.qty;
+    return `  ${String(i.qty).padStart(2)}× ${nameStr.padEnd(28)} @ ${fmtMoney(i.price).padStart(7)}   ${fmtMoney(lineTotal).padStart(8)}`;
+  }).join('\n');
 
-${'─'.repeat(44)}
+  // Payment details — each row shows method, amount, and tip portion if any
+  const paymentLines = order.payments && order.payments.length
+    ? order.payments.map(p=>{
+        const tipStr = p.tip>0 ? `   (incl. tip ${fmtMoney(p.tip)})` : '';
+        if(p.type==='lucky') return `  Lucky Bucks (${p.luckyCount}× $5)`.padEnd(34)+`${fmtMoney(p.amount).padStart(8)}${tipStr}`;
+        if(p.type==='card')  return `  Card`.padEnd(34)+`${fmtMoney(p.amount).padStart(8)}${tipStr}`;
+        return                      `  Cash`.padEnd(34)+`${fmtMoney(p.amount).padStart(8)}${tipStr}`;
+      }).join('\n')
+    : `  ${order.method==='card'?'Card':'Cash'}`.padEnd(34)+fmtMoney(order.total).padStart(8);
+
+  // Tips breakdown
+  const tipBreakdown = [];
+  if((order.cardTip ||0)>0) tipBreakdown.push(`  Card tip:`.padEnd(34)+fmtMoney(order.cardTip).padStart(8));
+  if((order.cashTip ||0)>0) tipBreakdown.push(`  Cash tip:`.padEnd(34)+fmtMoney(order.cashTip).padStart(8));
+  if((order.luckyTip||0)>0) tipBreakdown.push(`  Lucky Bucks tip:`.padEnd(34)+fmtMoney(order.luckyTip).padStart(8));
+  const tipText = tipBreakdown.length ? '\n'+tipBreakdown.join('\n') : '';
+  const tipTotal = (order.tip||0);
+  const grandTotal = order.total + tipTotal;
+
+  const body=`THE SWINGER'S CLUB — BEVERAGE CART
+${'═'.repeat(48)}
+Order #:         ${String(order.id+1).padStart(4,'0')}
+Date:            ${date}
+Time:            ${order.time}
+Served by:       ${staffName}
+
+ITEMS ORDERED
+${'─'.repeat(48)}
 ${lines}
-${'─'.repeat(44)}
-Subtotal  ${fmtMoney(order.subtotal)}
-GST (5%)  ${fmtMoney(order.gst)}
-TOTAL     ${fmtMoney(order.total)}${tipLine}
-${'─'.repeat(44)}
-${paymentLines}
-${'─'.repeat(44)}
+${'─'.repeat(48)}
+Subtotal:                              ${fmtMoney(order.subtotal).padStart(8)}
+GST (5%):                              ${fmtMoney(order.gst).padStart(8)}
+TOTAL:                                 ${fmtMoney(order.total).padStart(8)}${tipTotal>0?`
+Tip:                                   ${fmtMoney(tipTotal).padStart(8)}
+GRAND TOTAL:                           ${fmtMoney(grandTotal).padStart(8)}`:''}
+
+PAYMENT DETAILS
+${'─'.repeat(48)}
+${paymentLines}${tipText}
+${'═'.repeat(48)}
 
 Thank you for your purchase!
 The Swinger's Club Golf Course`;
