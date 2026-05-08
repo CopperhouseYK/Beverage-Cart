@@ -1086,7 +1086,7 @@ const GH_FILE   = 'settings.json';
 // Generate a fine-grained GitHub token at:
 // github.com/settings/personal-access-tokens/new
 // Permissions needed: Contents → Read and Write on this repo only.
-const GH_TOKEN = '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';
+const WORKER_URL = 'https://beverage-cart-sync.accounting-0d6.workers.dev';
 const FIXED_TO     = ['accounting@copperhouse.ca', 'manager@copperhouse.ca'];
 const ADMIN_PASS   = 'Admin123';
 // Refresh password — used to clear shift data. Separate from admin password.
@@ -1237,7 +1237,7 @@ function openSettingsModal(){
   // Show GitHub sync status
   const lbl = $('ghSyncLabel');
   if(lbl){
-    if(!GH_TOKEN){
+    if(!WORKER_URL){
       lbl.textContent = '⚠ Not configured';
       lbl.style.color = 'var(--amber)';
     } else {
@@ -1252,15 +1252,9 @@ function closeSettingsModal(){ $('settingsModal').classList.remove('open'); }
 
 // Fetch settings.json from GitHub and apply to app
 async function fetchSettingsFromGitHub(){
-  if(!GH_TOKEN) return; // not configured
+  if(!WORKER_URL) return;
   try {
-    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
-    const resp = await fetch(url, {
-      headers: {
-        'Authorization': `token ${GH_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
+    const resp = await fetch(WORKER_URL, { method: 'GET' });
     if(!resp.ok) {
       if(resp.status === 404) {
         console.log('settings.json not found on GitHub yet — will create on first admin save');
@@ -1270,13 +1264,11 @@ async function fetchSettingsFromGitHub(){
     }
     const data = await resp.json();
     const settings = JSON.parse(atob(data.content.replace(/\n/g,'')));
-    // Apply fetched settings
     if(settings.PRODUCTS)     PRODUCTS     = settings.PRODUCTS;
     if(settings.LIQUOR)       LIQUOR       = settings.LIQUOR;
     if(settings.SUPPLIES)     SUPPLIES     = settings.SUPPLIES;
     if(settings.REFRESH_PASS) REFRESH_PASS = settings.REFRESH_PASS;
     if(settings.USERS){
-      // Merge: preserve passwords for existing users, add new ones
       settings.USERS.forEach(u => {
         const existing = USERS.find(x => x.email.toLowerCase() === u.email.toLowerCase());
         if(!existing) USERS.push(u);
@@ -1284,28 +1276,25 @@ async function fetchSettingsFromGitHub(){
           existing.fullName = u.fullName;
           existing.phone    = u.phone;
           existing.active   = u.active;
-          existing.password = u.password; // sync password changes from admin
+          existing.password = u.password;
         }
       });
-      // Remove users that were deleted in admin (not in fetched list)
-      // Keep u0 always
       const fetchedEmails = settings.USERS.map(u => u.email.toLowerCase());
       USERS = USERS.filter(u => u.id === 'u0' || fetchedEmails.includes(u.email.toLowerCase()));
     }
-    // Re-render everything with new settings
     renderInv('openingGroups','open');
     renderInv('closingGroups','close');
     renderSuppliesChecklist();
     renderPosHome();
-    console.log('✓ Settings loaded from GitHub');
+    console.log('✓ Settings loaded via Worker');
   } catch(err) {
-    console.warn('Could not load settings from GitHub:', err.message);
+    console.warn('Could not load settings:', err.message);
   }
 }
 
 // Push current settings to GitHub as settings.json
 async function pushSettingsToGitHub(){
-  if(!GH_TOKEN) return; // not configured
+  if(!WORKER_URL) return;
   const settings = {
     version: 1,
     updatedAt: new Date().toISOString(),
@@ -1314,29 +1303,16 @@ async function pushSettingsToGitHub(){
   };
   const body = JSON.stringify(settings, null, 2);
   const encoded = btoa(unescape(encodeURIComponent(body)));
-
   try {
-    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
-    // Get current file SHA (required for updates)
     let sha = null;
-    const getResp = await fetch(url, {
-      headers: {
-        'Authorization': `token ${GH_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
+    const getResp = await fetch(WORKER_URL, { method: 'GET' });
     if(getResp.ok) {
       const existing = await getResp.json();
       sha = existing.sha;
     }
-    // Push the updated file
-    const putResp = await fetch(url, {
+    const putResp = await fetch(WORKER_URL, {
       method: 'PUT',
-      headers: {
-        'Authorization': `token ${GH_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: `Settings updated by ${currentUser ? currentUser.fullName : 'admin'} — ${new Date().toLocaleString()}`,
         content: encoded,
@@ -1344,14 +1320,13 @@ async function pushSettingsToGitHub(){
       })
     });
     if(!putResp.ok) throw new Error(`GitHub push failed: ${putResp.status}`);
-    console.log('✓ Settings saved to GitHub');
+    console.log('✓ Settings saved via Worker');
     return true;
   } catch(err) {
-    console.warn('Could not save settings to GitHub:', err.message);
+    console.warn('Could not save settings:', err.message);
     return false;
   }
 }
-
 function exportSettings(){
   const settings={
     version:1,
