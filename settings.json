@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T14:36:06.349Z",
+  "updatedAt": "2026-05-12T14:45:12.137Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -206,7 +206,7 @@
       "price": 8,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1260,
+      "fullWeight": 1460,
       "emptyWeight": 0
     },
     {
@@ -238,7 +238,7 @@
       "price": 7,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1180,
+      "fullWeight": 1310,
       "emptyWeight": 0
     },
     {
@@ -246,7 +246,7 @@
       "price": 6,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 780,
+      "fullWeight": 1220,
       "emptyWeight": 0
     }
   ],
