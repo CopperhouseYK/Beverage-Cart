@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-08T16:07:54.722Z",
+  "updatedAt": "2026-05-12T14:34:45.955Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -202,14 +202,6 @@
       "emptyWeight": 0
     },
     {
-      "name": "Sambuca",
-      "price": 6,
-      "on": true,
-      "bottleSizeMl": 750,
-      "fullWeight": 900,
-      "emptyWeight": 0
-    },
-    {
       "name": "Jose Cuervo Gold",
       "price": 6,
       "on": true,
@@ -226,15 +218,7 @@
       "emptyWeight": 0
     },
     {
-      "name": "JÃ¤germeister",
-      "price": 7,
-      "on": true,
-      "bottleSizeMl": 750,
-      "fullWeight": 1200,
-      "emptyWeight": 0
-    },
-    {
-      "name": "Captain Morgan's White",
+      "name": "Bacardi White Rum",
       "price": 7,
       "on": true,
       "bottleSizeMl": 750,
@@ -242,7 +226,7 @@
       "emptyWeight": 0
     },
     {
-      "name": "Captain Morgan's Spiced",
+      "name": "Bacardi Black Rum",
       "price": 7,
       "on": true,
       "bottleSizeMl": 750,
@@ -258,15 +242,7 @@
       "emptyWeight": 0
     },
     {
-      "name": "Bailey's Irish Cream",
-      "price": 7,
-      "on": true,
-      "bottleSizeMl": 750,
-      "fullWeight": 1100,
-      "emptyWeight": 0
-    },
-    {
-      "name": "PatrÃ³n Silver",
+      "name": "Patron Silver",
       "price": 8,
       "on": true,
       "bottleSizeMl": 750,
