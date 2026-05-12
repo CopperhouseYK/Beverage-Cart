@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T14:51:19.503Z",
+  "updatedAt": "2026-05-12T14:58:21.936Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -25,6 +25,11 @@
         {
           "name": "Alexander Keith's (can)",
           "price": 7.5,
+          "on": true
+        },
+        {
+          "name": "NWT Brewing Tee Time (can)",
+          "price": 10,
           "on": true
         },
         {
@@ -68,7 +73,7 @@
           "on": true
         },
         {
-          "name": "NWT Brewing Tee Time (can)",
+          "name": "Happy Dad's Fruit Punch (can)",
           "price": 10,
           "on": true
         }
