@@ -910,6 +910,10 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 <div class="section" id="step4">
   <h2 class="section-title">Closing count</h2>
   <p class="section-sub">Count remaining stock. For each liquor bottle, either weigh it and enter the end weight, or tick "Bottle empty" to auto-calculate from the start weight.</p>
+  <div id="closingLockedBanner" style="display:none" class="locked-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Closing count has been submitted and locked. To change values, start a new shift via the hamburger menu.
+  </div>
   <div id="closingGroups"></div>
   <div class="nav-row">
     <button class="btn-secondary" onclick="goStep(3)">← Back</button>
@@ -1108,9 +1112,9 @@ function formatDollarInput(el){
 // Admin password is set manually below.
 
 const SEED_USERS = [
-  {id:'u0',             fullName:'Administrator',     email:'accounting@copperhouse.ca',  phone:'',               password:'CH484rlr!!!', active:true},
-  {id:'u1',             fullName:'Paul Henry',         email:'paul@h2-solutions.ca',        phone:'(867) 446-4357', password:'PH4357',      active:true},
-  {id:'u1777874167936', fullName:'Chloe Hoechsmann',  email:'chloe.hoechsmann@gmail.com', phone:'(778) 679-1823', password:'CH1823',      active:true},
+  {id:'u0', fullName:'Administrator', email:'accounting@copperhouse.ca', phone:'', password:'CH484rlr!@#$', active:true},
+  {id:'u1', fullName:'Paul Henry', email:'paul@h2-solutions.ca', phone:'(867) 446-4357', password:'PH4357', active:true},
+  {id:'u1777874167936', fullName:'Chloe Hoechsmann', email:'chloe.hoechsmann@gmail.com', phone:'(778) 679-1823', password:'CH1823', active:true},
 ];
 
 let USERS = [];
@@ -1393,60 +1397,61 @@ let SUPPLIES = [
 // Items now carry their own price. Groups are for display only.
 let PRODUCTS = [
   { group:'Alcoholic Drinks', on:true, items:[
-    {name:'Kokanee (can)',                  price:7.50, on:true},
-    {name:'Budweiser (can)',                price:7.50, on:true},
-    {name:'Coors Light (can)',              price:7.50, on:true},
-    {name:"Alexander Keith's (can)",        price:7.50, on:true},
-    {name:'Corona Extra (can)',             price:10.00,on:true},
-    {name:'Bud Light Tall (can)',           price:10.00,on:true},
-    {name:"Mott's Clamato Caesar (can)",    price:10.00,on:true},
-    {name:'Strongbow Cider (can)',          price:10.00,on:true},
-    {name:'Twisted Tea (can)',              price:10.00,on:true},
-    {name:'White Claw (can)',               price:10.00,on:true},
-    {name:'Ole (can)',                      price:10.00,on:true},
-    {name:"Dillon's Gin Cocktail (can)",    price:10.00,on:true},
-    {name:'NWT Brewing Tee Time (can)',     price:10.00,on:true},
+    {name:'Kokanee (can)', price:7.5, on:true},
+    {name:'Alexander Keith\'s (can)', price:7.5, on:true},
+    {name:'Budweiser (can)', price:7.5, on:true},
+    {name:'Coors Light (can)', price:7.5, on:true},
+    {name:'NWT Brewing Tee Time (can)', price:10, on:true},
+    {name:'Corona Extra (can)', price:10, on:true},
+    {name:'Bud Light Tall (can)', price:10, on:true},
+    {name:'Mott\'s Clamato Caesar (can)', price:10, on:true},
+    {name:'Strongbow Cider (can)', price:10, on:true},
+    {name:'Twisted Tea (can)', price:10, on:true},
+    {name:'White Claw (can)', price:10, on:true},
+    {name:'Ole (can)', price:10, on:true},
+    {name:'Dillon\'s Gin Cocktail (can)', price:10, on:true},
+    {name:'Happy Dad\'s Fruit Punch (can)', price:10, on:true},
   ]},
   { group:'Non-Alcoholic', on:true, items:[
-    {name:'Water (bottle)',                 price:3.00, on:true},
-    {name:'Gatorade Orange (bottle)',       price:4.50, on:true},
-    {name:'Gatorade Red (bottle)',          price:4.50, on:true},
-    {name:'Gatorade Blue (bottle)',         price:4.50, on:true},
-    {name:'Gatorade Yellow (bottle)',       price:4.50, on:true},
-    {name:'Gatorade Purple (bottle)',       price:4.50, on:true},
-    {name:'Pepsi (bottle)',                 price:4.00, on:true},
-    {name:'Diet Pepsi (bottle)',            price:4.00, on:true},
-    {name:'Ginger Ale (bottle)',            price:4.00, on:true},
-    {name:'Iced Tea (bottle)',              price:4.00, on:true},
-    {name:'Diet Pepsi (mini can)',          price:2.50, on:true},
-    {name:'Pepsi (mini can)',               price:2.50, on:true},
+    {name:'Water (bottle)', price:3, on:true},
+    {name:'Gatorade Orange (bottle)', price:4.5, on:true},
+    {name:'Gatorade Red (bottle)', price:4.5, on:true},
+    {name:'Gatorade Blue (bottle)', price:4.5, on:true},
+    {name:'Gatorade G2 Purple (bottle)', price:4.5, on:true},
+    {name:'Gatorade Zero Yellow (bottle)', price:4.5, on:true},
+    {name:'Gatorade Zero Blue (bottle)', price:4.5, on:true},
+    {name:'Pepsi (bottle)', price:4, on:true},
+    {name:'Diet Pepsi (bottle)', price:4, on:true},
+    {name:'Ginger Ale (bottle)', price:4, on:true},
+    {name:'Iced Tea (bottle)', price:4, on:true},
+    {name:'Diet Pepsi (mini can)', price:2.5, on:true},
+    {name:'Pepsi (mini can)', price:2.5, on:true},
   ]},
   { group:'Snacks & Food', on:true, items:[
-    {name:'Oh Henry! Bar',                  price:3.00, on:true},
-    {name:'Mars Bar',                       price:3.00, on:true},
-    {name:'KitKat Bar',                     price:3.00, on:true},
-    {name:'Snickers Bar',                   price:3.00, on:true},
-    {name:"Lay's Classic",                  price:4.00, on:true},
-    {name:"Lay's Salt & Vinegar",           price:4.00, on:true},
-    {name:"Lay's Barbecue",                 price:4.00, on:true},
-    {name:'Doritos Nachos',                 price:4.00, on:true},
-    {name:'Assorted Sandwiches',            price:12.00,on:true},
+    {name:'Oh Henry! Bar', price:3, on:true},
+    {name:'Mars Bar', price:3, on:true},
+    {name:'KitKat Bar', price:3, on:true},
+    {name:'Snickers Bar', price:3, on:true},
+    {name:'Lay\'s Classic', price:4, on:true},
+    {name:'Lay\'s Salt & Vinegar', price:4, on:true},
+    {name:'Lay\'s Barbecue', price:4, on:true},
+    {name:'Doritos Nachos', price:4, on:true},
+    {name:'Assorted Sandwiches', price:12, on:true},
   ]},
 ];
 
 // fullWeight / emptyWeight are admin-set bottle specs (grams)
 // Bottles array tracks individual physical bottles taken from bar
 let LIQUOR = [
-  {name:'Sourpuss Raspberry',   price:6, on:true, bottleSizeMl:750, fullWeight:780,  emptyWeight:0},
-  {name:'Sambuca',              price:6, on:true, bottleSizeMl:750, fullWeight:900,  emptyWeight:0},
-  {name:'Jose Cuervo Gold',     price:6, on:true, bottleSizeMl:750, fullWeight:1010, emptyWeight:0},
-  {name:'Fireball Cinnamon Whisky', price:7, on:true, bottleSizeMl:750, fullWeight:1180, emptyWeight:0},
-  {name:'Jägermeister',         price:7, on:true, bottleSizeMl:750, fullWeight:1200, emptyWeight:0},
-  {name:"Captain Morgan's White",   price:7, on:true, bottleSizeMl:750, fullWeight:980,  emptyWeight:0},
-  {name:"Captain Morgan's Spiced",  price:7, on:true, bottleSizeMl:750, fullWeight:980,  emptyWeight:0},
-  {name:'Smirnoff Vodka',       price:7, on:true, bottleSizeMl:750, fullWeight:960,  emptyWeight:0},
-  {name:"Bailey's Irish Cream", price:7, on:true, bottleSizeMl:750, fullWeight:1100, emptyWeight:0},
-  {name:'Patrón Silver',        price:8, on:true, bottleSizeMl:750, fullWeight:1260, emptyWeight:0},
+  {name:'Jose Cuervo Gold', price:6, on:true, bottleSizeMl:750, fullWeight:1260, emptyWeight:0},
+  {name:'Patron Silver', price:8, on:true, bottleSizeMl:750, fullWeight:1460, emptyWeight:0},
+  {name:'Bacardi White Rum', price:7, on:true, bottleSizeMl:750, fullWeight:980, emptyWeight:0},
+  {name:'Bacardi Black Rum', price:7, on:true, bottleSizeMl:750, fullWeight:980, emptyWeight:0},
+  {name:'Smirnoff Vodka', price:7, on:true, bottleSizeMl:750, fullWeight:960, emptyWeight:0},
+  {name:'Fireball Cinnamon Whisky', price:7, on:true, bottleSizeMl:750, fullWeight:1350, emptyWeight:0},
+  {name:'Sourpuss Raspberry', price:6, on:true, bottleSizeMl:750, fullWeight:1220, emptyWeight:0},
+  {name:'Sambuca', price:6, on:true, bottleSizeMl:750, fullWeight:1220, emptyWeight:0},
+  {name:'Jagermeister', price:7, on:true, bottleSizeMl:750, fullWeight:1310, emptyWeight:0},
 ];
 
 // liqBottles replaced by selectedLiquor: per-shift list of bottles staff actually took
@@ -1461,6 +1466,7 @@ let closingSubmitted = false;    // true once "Calculate & cashout" is clicked
 let lockedRestocks = new Set();  // set of round numbers that have been locked
 let restockLiquor = {};          // restockLiquor[n] = [{liqIndex, openW, closeW, isEmpty}]
 let openingCounts = {};          // snapshot: {"gi_ii": qty} saved when opening is locked
+let closingCounts = {};          // snapshot: {"gi_ii": qty} saved when closing is submitted
 let restockCounts = {};          // snapshot: {roundN: {"gi_ii": qty}} saved when each round is locked
 
 // ── Utilities ─────────────────────────────────────────────────────────────
@@ -1585,6 +1591,10 @@ function renderInv(cid, phase) {
   renderLiqRows(phase);
   // Re-apply lock if already confirmed
   if(phase==='open') applyOpeningLockUI();
+  if(phase==='close'){
+    repopulateClosingFromSnapshot();
+    applyClosingLockUI();
+  }
 }
 
 function renderLiqRows(phase) {
@@ -1792,10 +1802,17 @@ function removeSelectedLiquor(si) {
 }
 
 // ── Sold quantities ───────────────────────────────────────────────────────
+// Returns the closing count for an item. If closing has been submitted,
+// reads from the snapshot (closingCounts); otherwise reads the live DOM input.
+function getCloseCount(gi, ii) {
+  const key = `${gi}_${ii}`;
+  if(closingSubmitted && closingCounts[key] !== undefined) return closingCounts[key];
+  return parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
+}
 function getSold(gi,ii) {
   const s=gv(`open_g${gi}_i${ii}`);
   let a=0; for(let r=1;r<=restockCount;r++) a+=gv(`add${r}_g${gi}_i${ii}`);
-  return Math.max(0, s+a-gv(`close_g${gi}_i${ii}`));
+  return Math.max(0, s+a-getCloseCount(gi,ii));
 }
 
 function getAllLiqSold() {
@@ -2136,8 +2153,69 @@ function lockLastRestock(cb) {
 }
 
 function proceedToClosing() {
-  const proceed = () => { closingSubmitted = true; stampEnd(); buildSummary(); goStep(5); };
+  const proceed = () => {
+    // Snapshot closing counts so they survive re-renders and can't be changed later
+    closingCounts = {};
+    activeProd().forEach((grp, gi) => {
+      grp.items.filter(x=>x.on).forEach((item, ii) => {
+        const qty = parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
+        if(qty > 0) closingCounts[`${gi}_${ii}`] = qty;
+      });
+    });
+    // Snapshot liquor closing weights and isEmpty flags into the entries
+    selectedLiquor.forEach((entry, si) => {
+      const closeEl = $(`liq_open_${si}_close`);
+      const emptyEl = $(`liq_open_${si}_empty`);
+      if(closeEl) entry.closeW = parseFloat(closeEl.value)||entry.closeW||0;
+      if(emptyEl) entry.isEmpty = emptyEl.checked;
+    });
+    Object.entries(restockLiquor).forEach(([n, bottles]) => {
+      bottles.forEach((entry, bi) => {
+        const closeEl = $(`liq_r${n}_${bi}_close`);
+        const emptyEl = $(`liq_r${n}_${bi}_empty`);
+        if(closeEl) entry.closeW = parseFloat(closeEl.value)||entry.closeW||0;
+        if(emptyEl) entry.isEmpty = emptyEl.checked;
+      });
+    });
+    closingSubmitted = true;
+    applyClosingLockUI();
+    stampEnd();
+    buildSummary();
+    goStep(5);
+  };
   lockLastRestock(proceed);
+}
+
+// Apply visual lock on the Closing tab — disable inputs and hide Submit button.
+function applyClosingLockUI() {
+  if(!closingSubmitted) return;
+  const cg = $('closingGroups');
+  if(cg){
+    cg.querySelectorAll('input, select').forEach(el=>{ el.disabled=true; el.style.pointerEvents='none'; });
+    cg.querySelectorAll('.inv-group').forEach(g=>g.classList.add('locked'));
+  }
+  const banner = $('closingLockedBanner');
+  if(banner) banner.style.display='flex';
+  const step4 = $('step4');
+  if(step4){
+    const navRow = step4.querySelector('.nav-row');
+    if(navRow){
+      navRow.querySelectorAll('button').forEach(b=>{
+        if(b.textContent.includes('Calculate') || b.textContent.includes('Back')) b.style.display='none';
+      });
+    }
+  }
+}
+
+// After renderInv('closingGroups','close') re-renders, repopulate inputs from
+// the snapshot so the UI matches the locked state.
+function repopulateClosingFromSnapshot() {
+  if(!closingSubmitted) return;
+  Object.entries(closingCounts).forEach(([key, qty]) => {
+    const [gi, ii] = key.split('_');
+    const el = $(`close_g${gi}_i${ii}`);
+    if(el) el.value = qty;
+  });
 }
 
 // ── Net stock value ───────────────────────────────────────────────────────
@@ -2177,7 +2255,7 @@ function getNetStockValue() {
         const opening = openingCounts[key] || 0;
         let restock = 0;
         for(let r = 1; r <= restockCount; r++) restock += (restockCounts[r] || {})[key] || 0;
-        const closing = parseInt(($(`close_g${gi}_i${ii}`) || {}).value) || 0;
+        const closing = getCloseCount(gi, ii);
         val += Math.max(0, opening + restock - closing) * item.price;
       });
     });
@@ -2465,7 +2543,7 @@ async function sendReport(){
       for(let r=1;r<=restockCount;r++) totalRestock+=(restockCounts[r]||{})[key]||0;
       const subtotal=opening+totalRestock;
       if(!subtotal && !posSoldMap[key]) return;
-      const closing=parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
+      const closing=getCloseCount(gi,ii);
       const theo=subtotal>0?subtotal-closing:'—';
       const actual=posSoldMap[key]||0;
       const variance=typeof theo==='number'?theo-actual:'—';
@@ -2698,7 +2776,7 @@ function renderRecon() {
       let closingVal, theoreticalSold, endingCount, variance;
       if(closingSubmitted){
         // Actual: use physical closing count
-        closingVal = parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
+        closingVal = getCloseCount(gi, ii);
         theoreticalSold = subtotalAvail > 0 ? (subtotalAvail - closingVal) : '—';
         endingCount = subtotalAvail > 0 ? closingVal : '—';
         variance = (subtotalAvail>0 && typeof theoreticalSold==='number')
@@ -4017,6 +4095,7 @@ function saveState() {
     openingLocked:     openingLocked,
     closingSubmitted:  closingSubmitted,
     openingCounts:  openingCounts,
+    closingCounts:  closingCounts,
     restockCounts:  restockCounts,
     restockCount:   restockCount,
     lockedRestocks: [...lockedRestocks],
@@ -4076,6 +4155,7 @@ async function restoreState(state) {
   closingSubmitted   = state.closingSubmitted   || false;
   if(state.refreshPass) REFRESH_PASS = state.refreshPass;
   openingCounts  = state.openingCounts  || {};
+  closingCounts  = state.closingCounts  || {};
   restockCounts  = state.restockCounts  || {};
 
   // Re-render inventory (this creates the DOM elements we need to populate)
@@ -4116,6 +4196,7 @@ async function restoreState(state) {
   recomputeInventory();
 
   if (openingLocked) applyOpeningLockUI();
+  if (closingSubmitted) { repopulateClosingFromSnapshot(); applyClosingLockUI(); }
 
   renderPosHome();
 
