@@ -2284,7 +2284,7 @@ function buildSummary() {
       if(qty>0) itemLines.push({name:item.name, price:item.price, qty, subtotal:qty*item.price});
     });
   });
-  itemLines.sort((a,b)=>b.subtotal-a.subtotal);
+  // Items kept in opening/restock display order — no sort
 
   const liqLines = getAllLiqSold();
 
@@ -2299,6 +2299,10 @@ function buildSummary() {
   const netStockTotal = netStockVal + netStockGst;
   window._sd={name,dateS,startT,endT,itemLines,liqLines,sub,gst,total,cashFloat,netStockVal,netStockGst,netStockTotal,usingTheoretical};
 
+  // Preserve user-entered Moneris values across re-renders (tab switches rebuild this section).
+  const _prevMCard = ($('mCard')||{}).value || '';
+  const _prevMTips = ($('mTips')||{}).value || '0';
+
   $('summaryContent').innerHTML=`
     <div class="sum-card">
       <div class="sum-hdr">Shift info</div>
@@ -2312,12 +2316,12 @@ function buildSummary() {
       <div class="sum-hdr">Sales breakdown</div>
       ${itemLines.map(l=>`
         <div class="sum-row">
-          <span class="lbl">${l.name}<span class="sold-badge">${l.qty}</span></span>
+          <span class="lbl">${l.name}<span class="sold-badge">${l.qty} @ $${l.price.toFixed(2)} each</span></span>
           <span class="val">$${l.subtotal.toFixed(2)}</span>
         </div>`).join('')}
       ${liqLines.map(l=>`
         <div class="sum-row liq-line">
-          <span class="lbl">${l.name}<span class="amber-badge">${l.totalOz} oz</span></span>
+          <span class="lbl">${l.name}<span class="amber-badge">${l.totalOz} oz @ $${l.price.toFixed(2)}/oz</span></span>
           <span class="val">$${(l.totalOz*l.price).toFixed(2)}</span>
         </div>`).join('')}
       ${(!itemLines.length&&!liqLines.length)?'<div class="sum-row"><span class="lbl" style="color:var(--muted)">No items sold</span><span></span></div>':''}
@@ -2389,6 +2393,11 @@ function buildSummary() {
     </div>`;
 
   initSig();
+
+  // Restore Moneris values that were captured before the innerHTML rebuild.
+  if(_prevMCard){ const el = $('mCard'); if(el) el.value = _prevMCard; }
+  if(_prevMTips && _prevMTips !== '0'){ const el = $('mTips'); if(el) el.value = _prevMTips; }
+
   recalc(); // populate reconciliation fields immediately on render
 
   // Show the actual recipient list including the logged-in user's email
@@ -2515,8 +2524,14 @@ async function sendReport(){
   const staffProfileEmail = currentUser ? (currentUser.email||'') : '';
   const sEmail = staffProfileEmail;
 
-  const itemsText = sd.itemLines.map(l=>`  ${l.name.padEnd(32)} x${String(l.qty).padStart(2)}  $${l.subtotal.toFixed(2)}`).join('\n');
-  const liqText   = sd.liqLines.map(l=>`  ${l.name.padEnd(32)} ${l.totalOz}oz  $${(l.totalOz*l.price).toFixed(2)}`).join('\n');
+  const itemsText = sd.itemLines.map(l=>{
+    const middle = `${l.qty} @ $${l.price.toFixed(2)}`;
+    return `  ${l.name.padEnd(30)}  ${middle.padStart(16)}  ${('$'+l.subtotal.toFixed(2)).padStart(10)}`;
+  }).join('\n');
+  const liqText = sd.liqLines.map(l=>{
+    const middle = `${l.totalOz}oz @ $${l.price.toFixed(2)}/oz`;
+    return `  ${l.name.padEnd(30)}  ${middle.padStart(18)}  ${('$'+(l.totalOz*l.price).toFixed(2)).padStart(10)}`;
+  }).join('\n');
   const posSoldMap = getPosActualSold();
 
   // Cash envelope / tip-out math
