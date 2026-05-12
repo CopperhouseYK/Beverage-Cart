@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T14:34:45.955Z",
+  "updatedAt": "2026-05-12T14:36:04.916Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -194,14 +194,6 @@
   ],
   "LIQUOR": [
     {
-      "name": "Sourpuss Raspberry",
-      "price": 6,
-      "on": true,
-      "bottleSizeMl": 750,
-      "fullWeight": 780,
-      "emptyWeight": 0
-    },
-    {
       "name": "Jose Cuervo Gold",
       "price": 6,
       "on": true,
@@ -210,11 +202,11 @@
       "emptyWeight": 0
     },
     {
-      "name": "Fireball Cinnamon Whisky",
-      "price": 7,
+      "name": "Patron Silver",
+      "price": 8,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1180,
+      "fullWeight": 1260,
       "emptyWeight": 0
     },
     {
@@ -242,11 +234,19 @@
       "emptyWeight": 0
     },
     {
-      "name": "Patron Silver",
-      "price": 8,
+      "name": "Fireball Cinnamon Whisky",
+      "price": 7,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1260,
+      "fullWeight": 1180,
+      "emptyWeight": 0
+    },
+    {
+      "name": "Sourpuss Raspberry",
+      "price": 6,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 780,
       "emptyWeight": 0
     }
   ],
