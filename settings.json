@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T14:48:33.097Z",
+  "updatedAt": "2026-05-12T14:49:07.005Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -255,6 +255,13 @@
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1220
+    },
+    {
+      "name": "Jagermeister",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1310
     }
   ],
   "SUPPLIES": [
