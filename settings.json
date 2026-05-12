@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T14:45:12.137Z",
+  "updatedAt": "2026-05-12T14:48:33.097Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -248,6 +248,13 @@
       "bottleSizeMl": 750,
       "fullWeight": 1220,
       "emptyWeight": 0
+    },
+    {
+      "name": "Sambuca",
+      "price": 6,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1220
     }
   ],
   "SUPPLIES": [
