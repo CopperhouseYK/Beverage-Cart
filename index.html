@@ -1589,8 +1589,11 @@ function renderInv(cid, phase) {
   c.appendChild(liqWrap);
 
   renderLiqRows(phase);
-  // Re-apply lock if already confirmed
-  if(phase==='open') applyOpeningLockUI();
+  // Re-apply lock if already confirmed (also restore snapshot to DOM if locked)
+  if(phase==='open'){
+    repopulateOpeningFromSnapshot();
+    applyOpeningLockUI();
+  }
   if(phase==='close'){
     repopulateClosingFromSnapshot();
     applyClosingLockUI();
@@ -1809,10 +1812,37 @@ function getCloseCount(gi, ii) {
   if(closingSubmitted && closingCounts[key] !== undefined) return closingCounts[key];
   return parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
 }
+// Returns the opening count for an item. If opening has been locked,
+// reads from the snapshot (openingCounts); otherwise reads the live DOM input.
+function getOpenCount(gi, ii) {
+  const key = `${gi}_${ii}`;
+  if(openingLocked && openingCounts[key] !== undefined) return openingCounts[key];
+  return parseInt(($(`open_g${gi}_i${ii}`)||{}).value)||0;
+}
+// Returns the qty added in a given restock round. If the round has been locked,
+// reads from the snapshot (restockCounts); otherwise reads the live DOM input.
+function getRestockCount(r, gi, ii) {
+  const key = `${gi}_${ii}`;
+  if(lockedRestocks.has(r) && restockCounts[r] && restockCounts[r][key] !== undefined) {
+    return restockCounts[r][key];
+  }
+  return parseInt(($(`add${r}_g${gi}_i${ii}`)||{}).value)||0;
+}
+// After renderInv re-renders #openingGroups, repopulate inputs from openingCounts
+// snapshot so the UI matches the locked state (matches the closing equivalent).
+function repopulateOpeningFromSnapshot() {
+  if(!openingLocked) return;
+  Object.entries(openingCounts).forEach(([key, qty]) => {
+    const [gi, ii] = key.split('_');
+    const el = $(`open_g${gi}_i${ii}`);
+    if(el) el.value = qty;
+  });
+}
 function getSold(gi,ii) {
-  const s=gv(`open_g${gi}_i${ii}`);
-  let a=0; for(let r=1;r<=restockCount;r++) a+=gv(`add${r}_g${gi}_i${ii}`);
-  return Math.max(0, s+a-getCloseCount(gi,ii));
+  const s = getOpenCount(gi, ii);
+  let a = 0;
+  for(let r = 1; r <= restockCount; r++) a += getRestockCount(r, gi, ii);
+  return Math.max(0, s + a - getCloseCount(gi, ii));
 }
 
 function getAllLiqSold() {
@@ -2251,10 +2281,9 @@ function getNetStockValue() {
     // Packaged goods — opening + restock − closing count
     prod.forEach((grp, gi) => {
       grp.items.filter(x => x.on).forEach((item, ii) => {
-        const key = `${gi}_${ii}`;
-        const opening = openingCounts[key] || 0;
+        const opening = getOpenCount(gi, ii);
         let restock = 0;
-        for(let r = 1; r <= restockCount; r++) restock += (restockCounts[r] || {})[key] || 0;
+        for(let r = 1; r <= restockCount; r++) restock += getRestockCount(r, gi, ii);
         const closing = getCloseCount(gi, ii);
         val += Math.max(0, opening + restock - closing) * item.price;
       });
@@ -2553,9 +2582,9 @@ async function sendReport(){
   activeProd().forEach((grp,gi)=>{
     grp.items.filter(x=>x.on).forEach((item,ii)=>{
       const key=`${gi}_${ii}`;
-      const opening=openingCounts[key]||0;
+      const opening=getOpenCount(gi, ii);
       let totalRestock=0;
-      for(let r=1;r<=restockCount;r++) totalRestock+=(restockCounts[r]||{})[key]||0;
+      for(let r=1;r<=restockCount;r++) totalRestock+=getRestockCount(r, gi, ii);
       const subtotal=opening+totalRestock;
       if(!subtotal && !posSoldMap[key]) return;
       const closing=getCloseCount(gi,ii);
@@ -2778,10 +2807,10 @@ function renderRecon() {
   prod.forEach((grp, gi) => {
     grp.items.filter(x=>x.on).forEach((item, ii) => {
       const key = `${gi}_${ii}`;
-      const opening = openingCounts[key] || 0;
+      const opening = getOpenCount(gi, ii);
       const restocks = {};
       for(let r=1; r<=restockCount; r++){
-        const qty = (restockCounts[r]||{})[key] || 0;
+        const qty = getRestockCount(r, gi, ii);
         if(qty>0) restocks[r]=qty;
       }
       const totalRestock = Object.values(restocks).reduce((s,q)=>s+q,0);
@@ -4187,6 +4216,7 @@ async function restoreState(state) {
   for (let n = 1; n <= totalRounds; n++) {
     restockCount = n;
     renderRestock(n);
+    renderRestockLiqRows(n); // populate liquor entries from restockLiquor[n]
   }
 
   // Restore all DOM input values
@@ -4260,9 +4290,11 @@ function autosave() {
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   pinInit(); // show PIN screen before anything else
-  // Fetch latest settings from GitHub (products, users, liquor, supplies)
-  // This runs in background — app is usable immediately with defaults
-  fetchSettingsFromGitHub();
+  // Fetch latest settings from GitHub (products, users, liquor, supplies) FIRST.
+  // We await it so it can't race with restoreState and clobber user data.
+  // If the network is unreachable, fetchSettingsFromGitHub catches and returns
+  // quickly so we don't block UI for long.
+  await fetchSettingsFromGitHub();
   const saved = hasSavedState();
 
   if (saved) {
