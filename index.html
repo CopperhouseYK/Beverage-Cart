@@ -1883,7 +1883,7 @@ function renderRestock(n) {
   const prod=activeProd();
   d.innerHTML=`<div class="restock-hdr">Restock round ${n} <span style="opacity:.7;font-weight:400;font-size:11px">items added</span></div>
     <div class="restock-body" id="rrBody${n}">`+
-    prod.flatMap((g,gi)=>g.items.filter(x=>x.on).map((item,ii)=>`
+    prod.flatMap((g,gi)=>g.items.map((item,ii)=> !item.on ? '' : `
       <div class="restock-row">
         <div class="rname">${item.name} <span style="color:var(--muted);font-size:11px">$${item.price.toFixed(2)}</span></div>
         ${stepperHtml(`add${n}_g${gi}_i${ii}`)}
@@ -1927,7 +1927,8 @@ function lockRestockRound(n) {
   // Snapshot restock quantities into restockCounts before locking DOM inputs
   if(!restockCounts[n]) restockCounts[n] = {};
   activeProd().forEach((grp, gi) => {
-    grp.items.filter(x=>x.on).forEach((item, ii) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const qty = parseInt(($(`add${n}_g${gi}_i${ii}`) || {}).value) || 0;
       if(qty > 0) restockCounts[n][`${gi}_${ii}`] = qty;
     });
@@ -2001,7 +2002,8 @@ function confirmAndLockOpening() {
   closeOpeningSummary();
   openingCounts = {};
   activeProd().forEach((grp, gi) => {
-    grp.items.filter(x=>x.on).forEach((item, ii) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const qty = parseInt(($(`open_g${gi}_i${ii}`) || {}).value) || 0;
       if(qty > 0) openingCounts[`${gi}_${ii}`] = qty;
     });
@@ -2118,7 +2120,8 @@ function buildRestockSummary(n) {
     });
     // Simpler: collect all non-zero items for this group
     const nonZero = [];
-    grp.items.filter(x=>x.on).forEach((item, ii) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const el = $(`add${n}_g${gi}_i${ii}`);
       const qty = el ? (parseInt(el.value)||0) : 0;
       if(qty > 0) nonZero.push({name:item.name, qty});
@@ -2187,7 +2190,8 @@ function proceedToClosing() {
     // Snapshot closing counts so they survive re-renders and can't be changed later
     closingCounts = {};
     activeProd().forEach((grp, gi) => {
-      grp.items.filter(x=>x.on).forEach((item, ii) => {
+      grp.items.forEach((item, ii) => {
+        if(!item.on) return;
         const qty = parseInt(($(`close_g${gi}_i${ii}`)||{}).value)||0;
         if(qty > 0) closingCounts[`${gi}_${ii}`] = qty;
       });
@@ -2308,7 +2312,8 @@ function buildSummary() {
   const prod=activeProd();
   let itemLines=[];
   prod.forEach((g,gi)=>{
-    g.items.filter(x=>x.on).forEach((item,ii)=>{
+    g.items.forEach((item, ii) => {
+      if(!item.on) return;
       const qty=getSold(gi,ii);
       if(qty>0) itemLines.push({name:item.name, price:item.price, qty, subtotal:qty*item.price});
     });
@@ -2580,7 +2585,8 @@ async function sendReport(){
   const reconHeader = `  ${'Item'.padEnd(30)}${'Open'.padStart(6)}${'Re'.padStart(6)}${'Avail'.padStart(6)}${'End'.padStart(6)}${'Theo'.padStart(6)}${'POS'.padStart(6)}${'Var'.padStart(6)}`;
   const reconRows = [];
   activeProd().forEach((grp,gi)=>{
-    grp.items.filter(x=>x.on).forEach((item,ii)=>{
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const key=`${gi}_${ii}`;
       const opening=getOpenCount(gi, ii);
       let totalRestock=0;
@@ -2805,7 +2811,8 @@ function renderRecon() {
   // ── Packaged goods rows ───────────────────────────────────────────────────
   const rows = [];
   prod.forEach((grp, gi) => {
-    grp.items.filter(x=>x.on).forEach((item, ii) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const key = `${gi}_${ii}`;
       const opening = getOpenCount(gi, ii);
       const restocks = {};
@@ -3424,7 +3431,8 @@ function recomputeInventory() {
 
   // 1. Add opening stock
   activeProd().forEach((grp, gi) => {
-    grp.items.filter(x=>x.on).forEach((item, ii) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const qty = openingCounts[`${gi}_${ii}`] || 0;
       if(qty > 0) posInventory[`${gi}_${ii}`] = qty;
     });
@@ -3600,7 +3608,8 @@ function getSessionItems() {
 
   // Packaged goods: use saved openingCounts snapshot + restock state
   activeProd().forEach((grp, gi) => {
-    grp.items.filter(x=>x.on).forEach((item, ii) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
       const key = `${gi}_${ii}`;
       const openVal = openingCounts[key] || 0;
       // For locked restocks, read from restockCounts snapshot; for active round, read DOM
@@ -4050,50 +4059,59 @@ async function sendReceipt(order, email){
     ? new Date($('shiftDate').value+'T12:00:00').toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})
     : new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
 
-  // Itemized lines
-  const lines = order.items.map(i=>`  ${String(i.qty).padStart(2)}× ${i.name.padEnd(30)}${i.isLiq?' (shot)':'       '}  ${fmtMoney(i.price*i.qty).padStart(8)}`).join('\n');
+  // Total line width — every numeric value is right-justified to this column.
+  const W = 44;
+  const padLR = (left, right) => {
+    const r = String(right);
+    const gap = Math.max(1, W - left.length - r.length);
+    return left + ' '.repeat(gap) + r;
+  };
 
-  // Payment breakdown lines by type
+  // Itemized lines — qty × name (with shot marker), right-aligned price
+  const lines = order.items.map(i => {
+    const prefix = `  ${i.qty}× ${i.name}${i.isLiq ? ' (shot)' : ''}`;
+    return padLR(prefix, fmtMoney(i.price * i.qty));
+  }).join('\n');
+
+  // Payment breakdown by type
   const paymentLines = order.payments && order.payments.length
-    ? order.payments.map(p=>{
-        if(p.type==='lucky') return `  Lucky Bucks (${p.luckyCount}× $5)`.padEnd(38) + fmtMoney(p.amount).padStart(8);
-        if(p.type==='card')  return '  Card'.padEnd(38) + fmtMoney(p.amount).padStart(8);
-        if(p.type==='cash'){
-          let line = '  Cash'.padEnd(38) + fmtMoney(p.amount).padStart(8);
+    ? order.payments.map(p => {
+        if(p.type === 'lucky') return padLR(`  Lucky Bucks (${p.luckyCount}× $5)`, fmtMoney(p.amount));
+        if(p.type === 'card')  return padLR('  Card', fmtMoney(p.amount));
+        if(p.type === 'cash')  {
+          let line = padLR('  Cash', fmtMoney(p.amount));
           if(p.tendered) line += `\n    Tendered: ${fmtMoney(p.tendered)}, Change: ${fmtMoney(p.change||0)}`;
           return line;
         }
         return '';
       }).filter(Boolean).join('\n')
-    : `  ${order.method==='card'?'Card':'Cash'}`.padEnd(38) + fmtMoney(order.total).padStart(8);
+    : padLR(`  ${order.method === 'card' ? 'Card' : 'Cash'}`, fmtMoney(order.total));
 
-  const tipLine = order.tip>0
-    ? `\n  Tip`.padEnd(38) + fmtMoney(order.tip).padStart(8)
-    : '';
+  const tipLine = order.tip > 0 ? '\n' + padLR('  Tip', fmtMoney(order.tip)) : '';
 
   const email_subject = `Beverage Cart Receipt - #${order.id+1}`;
 
   const body = `THE SWINGER'S CLUB GOLF COURSE
 BEVERAGE CART RECEIPT
-${'─'.repeat(44)}
+${'─'.repeat(W)}
 Order #${order.id+1}
 Date: ${date}
 Time: ${order.time}
 
 ITEMS
-${'─'.repeat(44)}
+${'─'.repeat(W)}
 ${lines}
 
-${'─'.repeat(44)}
-Subtotal:                            ${fmtMoney(order.subtotal).padStart(8)}
-GST (5%):                            ${fmtMoney(order.gst).padStart(8)}
-TOTAL:                               ${fmtMoney(order.total).padStart(8)}${tipLine}
+${'─'.repeat(W)}
+${padLR('Subtotal:', fmtMoney(order.subtotal))}
+${padLR('GST  - 709144729RT (5%):', fmtMoney(order.gst))}
+${padLR('TOTAL:', fmtMoney(order.total))}${tipLine}
 
 PAYMENT
-${'─'.repeat(44)}
+${'─'.repeat(W)}
 ${paymentLines}
 
-${'─'.repeat(44)}
+${'─'.repeat(W)}
 
 Thank you for your patronage!`;
 
