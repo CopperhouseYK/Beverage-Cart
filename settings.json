@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T14:58:21.936Z",
+  "updatedAt": "2026-05-12T15:00:22.509Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -13,17 +13,17 @@
           "on": true
         },
         {
+          "name": "Alexander Keith's (can)",
+          "price": 7.5,
+          "on": true
+        },
+        {
           "name": "Budweiser (can)",
           "price": 7.5,
           "on": true
         },
         {
           "name": "Coors Light (can)",
-          "price": 7.5,
-          "on": true
-        },
-        {
-          "name": "Alexander Keith's (can)",
           "price": 7.5,
           "on": true
         },
@@ -104,12 +104,17 @@
           "on": true
         },
         {
-          "name": "Gatorade Yellow (bottle)",
+          "name": "Gatorade G2 Purple (bottle)",
           "price": 4.5,
           "on": true
         },
         {
-          "name": "Gatorade Purple (bottle)",
+          "name": "Gatorade Zero Yellow (bottle)",
+          "price": 4.5,
+          "on": true
+        },
+        {
+          "name": "Gatorade Zero Blue (bottle)",
           "price": 4.5,
           "on": true
         },
