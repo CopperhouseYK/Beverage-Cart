@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T15:00:22.509Z",
+  "updatedAt": "2026-05-15T03:50:37.542Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -304,6 +304,14 @@
       "email": "chloe.hoechsmann@gmail.com",
       "phone": "(778) 679-1823",
       "password": "CH1823",
+      "active": true
+    },
+    {
+      "id": "u1778817037541",
+      "fullName": "Katie Heaphy",
+      "email": "kheaphy@live.ca",
+      "phone": "(867) 445-2712",
+      "password": "KH2712",
       "active": true
     }
   ],
