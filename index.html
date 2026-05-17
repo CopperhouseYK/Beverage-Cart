@@ -651,6 +651,7 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
       <div class="admin-tab"        id="atab-products" onclick="switchAdminTab('products')">Products</div>
       <div class="admin-tab"        id="atab-liquor"   onclick="switchAdminTab('liquor')">Liquor</div>
       <div class="admin-tab"        id="atab-supplies" onclick="switchAdminTab('supplies')">Supplies</div>
+      <div class="admin-tab"        id="atab-recipients" onclick="switchAdminTab('recipients')">Email Dist</div>
       <div class="admin-tab"        id="atab-refresh"  onclick="switchAdminTab('refresh')">Refresh</div>
     </div>
     <div class="admin-body">
@@ -686,6 +687,17 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
               <div style="display:flex;align-items:flex-end"><button class="add-item-btn" style="width:100%;background:var(--amber-pale);color:var(--amber);border-color:var(--amber-b)" onclick="addNewLiq()">+ Add</button></div>
             </div>
           </div>
+        </div>
+      </div>
+      <!-- ── EMAIL DISTRIBUTION TAB ── -->
+      <div class="admin-tab-panel" id="apanel-recipients">
+        <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px">
+          Email addresses that receive the daily shift report. The logged-in user's email is added automatically — no need to list it here.
+        </p>
+        <div id="adminRecipients"></div>
+        <div class="new-row" style="margin-top:6px;grid-template-columns:1fr auto">
+          <input type="email" id="newRecipientEmail" placeholder="new.address@example.com" autocapitalize="none" autocorrect="off">
+          <button class="add-item-btn" onclick="addRecipient()">+ Add</button>
         </div>
       </div>
       <!-- ── REFRESH TAB ── -->
@@ -789,7 +801,7 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
     <div class="hamburger-menu-user" id="hamburgerUserName">—</div>
     <button class="hamburger-menu-close" onclick="closeHamburger()">✕</button>
   </div>
-  <button class="hamburger-menu-item" id="hmAdminSettings" onclick="closeHamburger();openAdminAuth()">
+  <button class="hamburger-menu-item" id="hmAdminSettings" onclick="closeHamburger();openAdminDirect()">
     <span class="mi-icon">⚙</span> Admin settings
   </button>
   <!-- Change password option removed — passwords managed by admin -->
@@ -1090,7 +1102,8 @@ const GH_FILE   = 'settings.json';
 // Cloudflare Worker proxy URL — holds the GitHub PAT as an encrypted secret.
 // The token is never in client code; the Worker handles auth before forwarding to GitHub.
 const WORKER_URL = 'https://beverage-cart-sync.accounting-0d6.workers.dev';
-const FIXED_TO     = ['accounting@copperhouse.ca', 'manager@copperhouse.ca'];
+// Email Distribution list — configurable via admin panel. Saved to settings.json.
+let RECIPIENTS = ['accounting@copperhouse.ca', 'manager@copperhouse.ca'];
 const ADMIN_PASS   = 'Admin123';
 // Refresh password — used to clear shift data. Separate from admin password.
 let REFRESH_PASS = 'Refresh123';
@@ -1115,6 +1128,7 @@ const SEED_USERS = [
   {id:'u0', fullName:'Administrator', email:'accounting@copperhouse.ca', phone:'', password:'CH484rlr!@#$', active:true},
   {id:'u1', fullName:'Paul Henry', email:'paul@h2-solutions.ca', phone:'(867) 446-4357', password:'PH4357', active:true},
   {id:'u1777874167936', fullName:'Chloe Hoechsmann', email:'chloe.hoechsmann@gmail.com', phone:'(778) 679-1823', password:'CH1823', active:true},
+  {id:'u1778817037541', fullName:'Katie Heaphy', email:'kheaphy@live.ca', phone:'(867) 445-2712', password:'KH2712', active:true},
 ];
 
 let USERS = [];
@@ -1271,6 +1285,7 @@ async function fetchSettingsFromGitHub(){
     if(settings.LIQUOR)       LIQUOR       = settings.LIQUOR;
     if(settings.SUPPLIES)     SUPPLIES     = settings.SUPPLIES;
     if(settings.REFRESH_PASS) REFRESH_PASS = settings.REFRESH_PASS;
+    if(settings.RECIPIENTS)   RECIPIENTS   = settings.RECIPIENTS;
     if(settings.USERS){
       settings.USERS.forEach(u => {
         const existing = USERS.find(x => x.email.toLowerCase() === u.email.toLowerCase());
@@ -1302,7 +1317,7 @@ async function pushSettingsToGitHub(){
     version: 1,
     updatedAt: new Date().toISOString(),
     updatedBy: currentUser ? currentUser.email : 'unknown',
-    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS
+    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS, RECIPIENTS
   };
   const body = JSON.stringify(settings, null, 2);
   const encoded = btoa(unescape(encodeURIComponent(body)));
@@ -1335,7 +1350,7 @@ function exportSettings(){
   const settings={
     version:1,
     exportedAt: new Date().toISOString(),
-    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS
+    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS, RECIPIENTS
   };
   const blob=new Blob([JSON.stringify(settings,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -1356,6 +1371,7 @@ function importSettings(input){
       PRODUCTS=s.PRODUCTS;
       LIQUOR=s.LIQUOR;
       SUPPLIES=s.SUPPLIES;
+      if(s.RECIPIENTS) RECIPIENTS=s.RECIPIENTS;
       // Merge users: keep existing passwords, add new users from import
       s.USERS.forEach(u=>{
         const existing=USERS.find(x=>x.email.toLowerCase()===u.email.toLowerCase());
@@ -1444,12 +1460,12 @@ let PRODUCTS = [
 // Bottles array tracks individual physical bottles taken from bar
 let LIQUOR = [
   {name:'Jose Cuervo Gold', price:6, on:true, bottleSizeMl:750, fullWeight:1260, emptyWeight:0},
-  {name:'Patron Silver', price:8, on:true, bottleSizeMl:750, fullWeight:1460, emptyWeight:0},
+  {name:'Patron Silver', price:8, on:true, bottleSizeMl:750, fullWeight:1440, emptyWeight:0},
   {name:'Bacardi White Rum', price:7, on:true, bottleSizeMl:750, fullWeight:980, emptyWeight:0},
   {name:'Bacardi Black Rum', price:7, on:true, bottleSizeMl:750, fullWeight:980, emptyWeight:0},
   {name:'Smirnoff Vodka', price:7, on:true, bottleSizeMl:750, fullWeight:960, emptyWeight:0},
-  {name:'Fireball Cinnamon Whisky', price:7, on:true, bottleSizeMl:750, fullWeight:1350, emptyWeight:0},
-  {name:'Sourpuss Raspberry', price:6, on:true, bottleSizeMl:750, fullWeight:1220, emptyWeight:0},
+  {name:'Fireball Cinnamon Whisky', price:7, on:true, bottleSizeMl:750, fullWeight:1300, emptyWeight:0},
+  {name:'Sourpuss Raspberry', price:8, on:true, bottleSizeMl:750, fullWeight:1360, emptyWeight:0},
   {name:'Sambuca', price:6, on:true, bottleSizeMl:750, fullWeight:1220, emptyWeight:0},
   {name:'Jagermeister', price:7, on:true, bottleSizeMl:750, fullWeight:1310, emptyWeight:0},
 ];
@@ -1540,7 +1556,17 @@ function calcBottleSold(entry) {
 
 // ── Render inventory (steps 2 & 4) ───────────────────────────────────────
 function renderInv(cid, phase) {
-  const c=$(cid); c.innerHTML='';
+  const c=$(cid);
+  // Capture user-entered input values BEFORE clearing the container, so they
+  // survive the re-render. Snapshot-based restoration (openingCounts /
+  // closingCounts) runs at the end and takes precedence when locked.
+  const _preserved = {};
+  if(c){
+    c.querySelectorAll('input[id]').forEach(el => {
+      if(el.value !== '' && el.value !== '0') _preserved[el.id] = el.value;
+    });
+  }
+  c.innerHTML='';
 
   // For closing, only filter to session items when opening has been locked
   // (before that, openingCounts is empty so there's nothing to filter against)
@@ -1589,7 +1615,12 @@ function renderInv(cid, phase) {
   c.appendChild(liqWrap);
 
   renderLiqRows(phase);
-  // Re-apply lock if already confirmed (also restore snapshot to DOM if locked)
+  // Restore captured input values from BEFORE the re-render.
+  Object.entries(_preserved).forEach(([id, val]) => {
+    const el = $(id);
+    if(el) el.value = val;
+  });
+  // Snapshot restoration + lock UI (overrides preserved when locked)
   if(phase==='open'){
     repopulateOpeningFromSnapshot();
     applyOpeningLockUI();
@@ -2438,7 +2469,11 @@ function buildSummary() {
   const recipEl = $('reportRecipients');
   if(recipEl){
     const staffEmail = currentUser ? (currentUser.email||'') : '';
-    recipEl.innerHTML = `manager@copperhouse.ca<br>accounting@copperhouse.ca${staffEmail ? '<br>'+staffEmail : ''}`;
+    const allRecips = [...RECIPIENTS];
+    if(staffEmail && !allRecips.includes(staffEmail)) allRecips.push(staffEmail);
+    recipEl.innerHTML = allRecips.length
+      ? allRecips.map(e => escH(e)).join('<br>')
+      : '<span style="color:var(--muted);font-style:italic">No recipients configured — set them in Admin → Email Dist.</span>';
   }
 
 }
@@ -2571,6 +2606,67 @@ function getSignatureDataUrl(){
 }
 
 // ── Send email ────────────────────────────────────────────────────────────
+// ── POS Transactions CSV builder ─────────────────────────────────────────
+function buildPosCSV(){
+  const dateRaw = ($('shiftDate')||{}).value;
+  const d = dateRaw ? new Date(dateRaw + 'T12:00:00') : new Date();
+  const dateFmt = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+  const csvField = v => {
+    const s = String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const money = (n, neg) => {
+    const abs = Math.abs(n).toFixed(2);
+    return neg ? `(${abs})` : abs;
+  };
+  const rows = [];
+  rows.push('Order #,Date,Time,Type,Item,Qty,Price,Amount');
+  posOrders.forEach((order, idx) => {
+    const orderNum = idx + 1;
+    const timeFmt = (order.time||'').replace(' ','').toLowerCase();
+    order.items.forEach(item => {
+      const name = item.name + (item.isLiq ? ' (shot)' : '');
+      const lineTotal = (item.price||0) * (item.qty||0);
+      rows.push([
+        orderNum, dateFmt, timeFmt, 'Purchase',
+        csvField(name), item.qty,
+        money(item.price), money(lineTotal)
+      ].join(','));
+    });
+    if((order.gst||0) > 0){
+      rows.push([orderNum, dateFmt, timeFmt, 'Purchase', 'GST', 1, money(order.gst), money(order.gst)].join(','));
+    }
+    if((order.tip||0) > 0){
+      rows.push([orderNum, dateFmt, timeFmt, 'Purchase', 'Tip', 1, money(order.tip), money(order.tip)].join(','));
+    }
+    if(order.payments && order.payments.length){
+      order.payments.forEach(p => {
+        let label = 'Cash';
+        if(p.type === 'card')  label = 'Card';
+        else if(p.type === 'cash')  label = 'Cash';
+        else if(p.type === 'lucky') label = `Lucky Bucks (${p.luckyCount||0}× $5)`;
+        const charged = (p.amount||0) + (p.tip||0);
+        rows.push([
+          orderNum, dateFmt, timeFmt, 'Payment',
+          csvField(label), 1,
+          money(charged, true), money(charged, true)
+        ].join(','));
+      });
+    } else {
+      const label = order.method === 'cash' ? 'Cash' : 'Card';
+      const charged = (order.total||0) + (order.tip||0);
+      rows.push([
+        orderNum, dateFmt, timeFmt, 'Payment',
+        label, 1, money(charged, true), money(charged, true)
+      ].join(','));
+    }
+  });
+  return '\uFEFF' + rows.join('\r\n');
+}
+function toBase64Utf8(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
 async function sendReport(){
   const sd=window._sd;
   if(!sd){showStatus('error','Please complete the cashout step first.');return;}
@@ -2578,6 +2674,9 @@ async function sendReport(){
     showStatus('error','Closing count has not been submitted yet.\n\nGo to the "4 · Closing" tab, count remaining stock, and tap "Calculate & cashout →" before sending the report.');
     return;
   }
+  const _posCsv = buildPosCSV();
+  const pos_csv = toBase64Utf8(_posCsv);
+  const pos_csv_filename = `pos-transactions-${(sd.dateS||'').replace(/[^0-9A-Za-z]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')}.csv`;
 
   const mTotal = Math.max(0, parseFloat(($('mCard')||{}).value)||0);
   const mTips  = Math.max(0, parseFloat(($('mTips')||{}).value)||0);
@@ -2739,7 +2838,8 @@ End of report.`;
 
   try{
     emailjs.init(EJS_KEY);
-    const to=[...FIXED_TO];
+    const to = [];
+    RECIPIENTS.forEach(e => { if(e && !to.includes(e)) to.push(e); });
     if(sEmail && sEmail.includes('@') && !to.includes(sEmail)) to.push(sEmail);
     await emailjs.send(EJS_SERVICE,EJS_TEMPLATE,{
       to_emails:    to.join(', '),
@@ -2754,6 +2854,8 @@ End of report.`;
       moneris_tips: `$${mTips.toFixed(2)}`,
       report_body:  body,
       signature_image: signature_image,
+      pos_csv:         pos_csv,
+      pos_csv_filename: pos_csv_filename,
     });
     showStatus('success',`✓ Report sent to: ${to.join(', ')}`);
     btn.textContent='✓ Sent'; btn.style.background='var(--green)';
@@ -2965,6 +3067,16 @@ function goStep(n){
 }
 
 // ── Admin password ────────────────────────────────────────────────────────
+// Direct admin entry — skips the password modal since the menu item is already
+// gated to the admin account (id === 'u0'). To re-enable the password gate,
+// change the hamburger menu's onclick back to openAdminAuth().
+function openAdminDirect(){
+  if(!currentUser || currentUser.id !== 'u0'){
+    alert('Admin settings are restricted to the administrator account.');
+    return;
+  }
+  openAdmin();
+}
 function openAdminAuth(){
   if(!currentUser || currentUser.id !== 'u0'){
     alert('Admin settings are restricted to the administrator account.');
@@ -2993,7 +3105,8 @@ function openAdmin(){
     products:JSON.parse(JSON.stringify(PRODUCTS)),
     liquor:JSON.parse(JSON.stringify(LIQUOR)),
     supplies:[...SUPPLIES],
-    users:JSON.parse(JSON.stringify(USERS))  // always fresh from live USERS
+    users:JSON.parse(JSON.stringify(USERS)),
+    recipients:[...RECIPIENTS]
   };
   const rpd=$('refreshPwDisplay'); if(rpd) rpd.value=REFRESH_PASS;
   renderAdmin();
@@ -3134,6 +3247,8 @@ function renderAdmin(){
       </div>`;
     uc.appendChild(row);
   });
+  if(!draft.recipients) draft.recipients = [...RECIPIENTS];
+  renderAdminRecipients();
 }
 
 function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -3158,6 +3273,12 @@ function syncDraftInputs(){
   draft.supplies.forEach((_,si)=>{
     const e=$(`sv_${si}`); if(e) draft.supplies[si]=e.value;
   });
+  if(draft.recipients){
+    draft.recipients.forEach((_, idx) => {
+      const el = $(`rec_${idx}`);
+      if(el) draft.recipients[idx] = (el.value||'').trim().toLowerCase();
+    });
+  }
   // Users are edited via popup — no inline inputs to sync
 }
 
@@ -3298,6 +3419,47 @@ function attachSupplyDrag(row){
 }
 
 function delSupply(si){ syncDraftInputs(); draft.supplies.splice(si,1); renderAdmin(); }
+
+// ── Email Distribution (recipient list) ──────────────────────────────────
+function renderAdminRecipients(){
+  const c = $('adminRecipients'); if(!c) return;
+  c.innerHTML = '';
+  draft.recipients.forEach((email, idx) => {
+    const row = document.createElement('div');
+    row.className = 'aitem-row';
+    row.style.gridTemplateColumns = '1fr 36px';
+    row.innerHTML =
+      `<input type="email" id="rec_${idx}" value="${escH(email)}" autocapitalize="none" autocorrect="off">` +
+      `<button class="del-btn" onclick="delRecipient(${idx})" title="Remove">✕</button>`;
+    c.appendChild(row);
+  });
+}
+function syncRecipientsFromInputs(){
+  draft.recipients.forEach((_, idx) => {
+    const el = $(`rec_${idx}`);
+    if(el) draft.recipients[idx] = (el.value||'').trim().toLowerCase();
+  });
+}
+function addRecipient(){
+  syncRecipientsFromInputs();
+  syncDraftInputs();
+  const inp = $('newRecipientEmail');
+  const v = (inp?.value||'').trim().toLowerCase();
+  if(!v) return;
+  if(draft.recipients.includes(v)){
+    alert('That email is already on the list.');
+    inp.value = '';
+    return;
+  }
+  draft.recipients.push(v);
+  if(inp) inp.value = '';
+  renderAdmin();
+}
+function delRecipient(idx){
+  syncRecipientsFromInputs();
+  draft.recipients.splice(idx, 1);
+  renderAdmin();
+}
 function addSupply(){
   const inp=$('newSupplyName'); const v=(inp?.value||'').trim(); if(!v) return;
   syncDraftInputs(); draft.supplies.push(v); inp.value=''; renderAdmin();
@@ -3440,6 +3602,12 @@ async function applyAdmin(){
   LIQUOR=JSON.parse(JSON.stringify(draft.liquor));
   SUPPLIES=[...draft.supplies];
   USERS=JSON.parse(JSON.stringify(draft.users.filter(u=>u.email))).map(u=>({...u, phone:formatPhone(u.phone||''), email:u.email.toLowerCase()}));
+  if(draft.recipients){
+    const seen = new Set();
+    RECIPIENTS = draft.recipients
+      .map(e => (e||'').trim().toLowerCase())
+      .filter(e => e && !seen.has(e) && seen.add(e));
+  }
   renderInv('openingGroups','open');
   renderInv('closingGroups','close');
   renderSuppliesChecklist();
@@ -4169,6 +4337,8 @@ Thank you for your patronage!`;
       moneris_tips: '',
       report_body:  body,
       signature_image: '',
+      pos_csv:         '',
+      pos_csv_filename: '',
     });
   }catch(e){ console.warn('Receipt email failed:',e); }
 }
