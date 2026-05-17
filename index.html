@@ -948,6 +948,10 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   </div>
   <div id="emailStatus"></div>
   <div id="setupNote" style="display:none"></div>
+  <div id="signatureWarning" style="display:none;background:var(--red-pale);border:1px solid #f5c6c2;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--red);line-height:1.5;align-items:center;gap:10px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Signature required.</strong> Please draw your signature in the box above before sending the report.</span>
+  </div>
   <div class="nav-row">
     <button class="btn-secondary" onclick="goStep(4)">← Back</button>
     <button class="btn-email" id="sendBtn" onclick="sendReport()">
@@ -2367,6 +2371,7 @@ function buildSummary() {
   // Preserve user-entered Moneris values across re-renders (tab switches rebuild this section).
   const _prevMCard = ($('mCard')||{}).value || '';
   const _prevMTips = ($('mTips')||{}).value || '0';
+  const _prevNotes = ($('shiftNotes')||{}).value || '';
 
   $('summaryContent').innerHTML=`
     <div class="sum-card">
@@ -2451,8 +2456,19 @@ function buildSummary() {
       <div class="sum-row total"><span class="lbl">Total tips received</span><span class="val" id="dTotalTips">$0.00</span></div>
     </div>
 
+    <div class="sum-card">
+      <div class="sum-hdr">Shift notes (optional)</div>
+      <div style="padding:14px 16px">
+        <textarea id="shiftNotes" placeholder="Any notes about this shift? (incidents, low-stock items, customer feedback, etc.)" maxlength="500"
+          style="width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none;resize:vertical;box-sizing:border-box;"
+          oninput="updateNotesCounter();autosave();"></textarea>
+        <div style="text-align:right;font-size:11px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;">
+          <span id="shiftNotesCounter">0</span> / 500
+        </div>
+      </div>
+    </div>
     <div class="sig-field">
-      <label>Signature</label>
+      <label>Signature <span style="color:var(--red);font-weight:600;">*</span></label>
       <canvas class="sig-canvas" id="sigCanvas"></canvas>
       <button class="clear-sig" onclick="clearSig()">Clear</button>
     </div>`;
@@ -2462,8 +2478,11 @@ function buildSummary() {
   // Restore Moneris values that were captured before the innerHTML rebuild.
   if(_prevMCard){ const el = $('mCard'); if(el) el.value = _prevMCard; }
   if(_prevMTips && _prevMTips !== '0'){ const el = $('mTips'); if(el) el.value = _prevMTips; }
+  if(_prevNotes){ const el = $('shiftNotes'); if(el){ el.value = _prevNotes; updateNotesCounter(); } }
 
   recalc(); // populate reconciliation fields immediately on render
+  updateSignatureWarning();
+  updateNotesCounter();
 
   // Show the actual recipient list including the logged-in user's email
   const recipEl = $('reportRecipients');
@@ -2570,12 +2589,33 @@ function initSig(){
   const pos=e=>{const r=cv.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};};
   cv.addEventListener('mousedown',e=>{drawing=true;ctx.beginPath();const p=pos(e);ctx.moveTo(p.x,p.y);});
   cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
-  cv.addEventListener('mouseup',()=>drawing=false);
+  cv.addEventListener('mouseup',()=>{ drawing=false; updateSignatureWarning(); });
   cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;ctx.beginPath();const p=pos(e);ctx.moveTo(p.x,p.y);});
   cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
-  cv.addEventListener('touchend',()=>drawing=false);
+  cv.addEventListener('touchend',()=>{ drawing=false; updateSignatureWarning(); });
 }
-function clearSig(){const c=$('sigCanvas');if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);}
+function clearSig(){
+  const c=$('sigCanvas');
+  if(c) c.getContext('2d').clearRect(0,0,c.width,c.height);
+  updateSignatureWarning();
+}
+function updateNotesCounter(){
+  const el = $('shiftNotes'); if(!el) return;
+  const counter = $('shiftNotesCounter');
+  if(counter) counter.textContent = String(el.value.length);
+}
+// Show/hide the red "signature required" warning + disable Send button when
+// the signature canvas is empty. Called whenever the canvas state changes.
+function updateSignatureWarning(){
+  const warn = $('signatureWarning');
+  const sendBtn = $('sendBtn');
+  const hasSig = getSignatureDataUrl() !== '';
+  if(warn) warn.style.display = hasSig ? 'none' : 'flex';
+  if(sendBtn){
+    sendBtn.style.opacity = hasSig ? '' : '0.5';
+    sendBtn.style.cursor = hasSig ? '' : 'not-allowed';
+  }
+}
 
 // Capture the signature canvas as a base64 PNG data URL with a white background.
 // Returns '' if the canvas is empty (no signature drawn).
@@ -2672,6 +2712,13 @@ async function sendReport(){
   if(!sd){showStatus('error','Please complete the cashout step first.');return;}
   if(!closingSubmitted){
     showStatus('error','Closing count has not been submitted yet.\n\nGo to the "4 · Closing" tab, count remaining stock, and tap "Calculate & cashout →" before sending the report.');
+    return;
+  }
+  // Signature required
+  const _sigUrlEarly = getSignatureDataUrl();
+  if(!_sigUrlEarly){
+    showStatus('error','✗ Signature required. Please draw your signature in the box above before sending the report.');
+    updateSignatureWarning();
     return;
   }
   const _posCsv = buildPosCSV();
@@ -2804,7 +2851,11 @@ Card tips:    $${Math.max(cardTips, mTips - cashTips - luckyTips).toFixed(2)}
 Cash tips:    $${cashTips.toFixed(2)}
 Lucky tips:   $${luckyTips.toFixed(2)}
 TOTAL TIPS:   $${totalTips.toFixed(2)}
-
+${(($('shiftNotes')||{}).value||'').trim() ? `
+SHIFT NOTES
+${'─'.repeat(74)}
+${($('shiftNotes').value||'').trim()}
+` : ''}
 DETAILED RECONCILIATION (packaged goods)
 ${'─'.repeat(74)}
 ${reconRows.length ? reconHeader+'\n'+reconRows.join('\n') : '  (no items)'}
@@ -3692,8 +3743,19 @@ function renderPosHome(){
   $('posShiftTotal').textContent = fmtMoney(total);
   $('posOrderCount').textContent = count===1?'1 order':`${count} orders`;
 
+  // Show/hide "+ New order" button based on closing status
+  const newBtn = document.querySelector('.pos-new-btn');
+  if(newBtn) newBtn.style.display = closingSubmitted ? 'none' : '';
+
+  // Closed banner
+  const closedBanner = closingSubmitted
+    ? `<div style="background:#f0f4f0;border:1px solid var(--green-mid);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green);line-height:1.5;display:flex;align-items:center;gap:10px;">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+         <span>POS is closed — closing count has been submitted. To take more orders, start a new shift via the hamburger menu.</span>
+       </div>`
+    : '';
   if(!posOrders.length){
-    c.innerHTML=`<div class="pos-empty">
+    c.innerHTML = closedBanner + `<div class="pos-empty">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       <p>No orders yet.<br>Tap <strong>New order</strong> to get started.</p>
     </div>`;
@@ -3719,7 +3781,7 @@ function renderPosHome(){
       <div class="order-card-left">
         <div class="order-num">Order #${i+1} · ${o.time}${o.editedAt?` · edited ${o.editedAt}`:''}</div>
         <div class="order-items-preview">${escH(preview)}</div>
-        <button onclick="editOrder(${i})" style="margin-top:7px;font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;text-decoration:underline;">Edit order</button>
+        ${closingSubmitted ? '' : `<button onclick="editOrder(${i})" style="margin-top:7px;font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;text-decoration:underline;">Edit order</button>`}
       </div>
       <div class="order-card-right">
         <div class="order-total">${fmtMoney(o.total)}</div>
@@ -3759,7 +3821,7 @@ function renderPosHome(){
     ? `Lucky Bucks (${luckyBucksCertCount} cert${luckyBucksCertCount!==1?'s':''})`
     : 'Lucky Bucks';
 
-  c.innerHTML = cardHtml + `
+  c.innerHTML = closedBanner + cardHtml + `
     <div class="pos-summary-card" style="margin-top:18px">
       <div class="pos-sum-hdr"><span>Shift summary</span><span>${count} orders</span></div>
       ${cardSales >0?`<div class="sum-row"><span class="lbl">Card</span><span class="val">${fmtMoney(cardSales)}</span></div>`:''}
@@ -3777,6 +3839,10 @@ function renderPosHome(){
 
 // ── Order builder ─────────────────────────────────────────────────────────
 function newOrder(){
+  if(closingSubmitted){
+    alert('Closing count has been submitted. POS is closed for this shift.\n\nTo take more orders, start a new shift via the hamburger menu.');
+    return;
+  }
   posCart={};
   posEditId=null;
   recomputeInventory(); // ensure fresh stock counts before opening builder
@@ -3784,6 +3850,10 @@ function newOrder(){
 }
 
 function editOrder(i){
+  if(closingSubmitted){
+    alert('Closing count has been submitted. POS is closed for this shift.\n\nOrders cannot be edited after closing.');
+    return;
+  }
   const order=posOrders[i]; if(!order) return;
   posEditId=i; // set BEFORE recompute so this order is excluded from sold
   // Rebuild posCart from the saved order items
@@ -3947,6 +4017,10 @@ function updateBuilderTotals(){
 let paymentRows = [];
 
 function openPayModal(){
+  if(closingSubmitted){
+    alert('Closing count has been submitted. POS is closed for this shift.');
+    return;
+  }
   const {total}=posCartTotal();
   paymentRows=[];
   $('paymentRows').innerHTML='';
