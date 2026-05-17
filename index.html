@@ -1228,8 +1228,49 @@ function confirmNewShift(){
     $('newShiftPw').value=''; $('newShiftPw').focus();
     return;
   }
-  clearState();
-  location.reload();
+  // Explicitly clear localStorage with diagnostic logging
+  let lsError = null;
+  try {
+    localStorage.removeItem(LS_KEY);
+    // Verify it actually removed
+    if(localStorage.getItem(LS_KEY) !== null){
+      lsError = 'Removal did not take effect';
+    }
+  } catch(e) {
+    lsError = e.message || 'unknown';
+  }
+  if(lsError){
+    console.warn('clearState had issues:', lsError);
+  }
+  // Reset all in-memory shift globals so even if reload is from cache, state is fresh
+  try {
+    openingCounts = {};
+    closingCounts = {};
+    restockCounts = {};
+    openingLocked = false;
+    closingSubmitted = false;
+    lockedRestocks = new Set();
+    selectedLiquor = [];
+    restockLiquor = {};
+    restockCount = 0;
+    posOrders = [];
+    posCart = {};
+    posInventory = {};
+    posEditId = null;
+    endTime = '';
+    currentUser = null;
+    window._sd = null;
+  } catch(e){
+    console.warn('Could not reset globals (continuing anyway):', e);
+  }
+  // Close the modal first so the UI looks correct during reload
+  closeNewShiftModal();
+  // Force a fresh fetch via cache-busting query param so iPad Safari can't
+  // serve the cached HTML. The trailing _t parameter is harmless.
+  const baseUrl = window.location.pathname;
+  const fresh = baseUrl + '?_t=' + Date.now();
+  // Small delay so closeNewShiftModal's CSS transition has time to render
+  setTimeout(() => { window.location.replace(fresh); }, 80);
 }
 
 function openHamburger(){
