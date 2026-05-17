@@ -2857,9 +2857,11 @@ End of report.`;
       pos_csv:         pos_csv,
       pos_csv_filename: pos_csv_filename,
     });
-    showStatus('success',`✓ Report sent to: ${to.join(', ')}`);
+    showStatus('success',`✓ Report sent to: ${to.join(', ')}\n\nSigning out and resetting in 5 seconds…`);
     btn.textContent='✓ Sent'; btn.style.background='var(--green)';
     clearState();
+    // Auto-reload after a short delay so the next user starts fresh
+    setTimeout(() => { location.reload(); }, 5000);
   }catch(err){
     showStatus('error',`Send failed: ${err.text||err.message||'Unknown error'}\n\nPlease screenshot this page as a backup.`);
     btn.disabled=false;
