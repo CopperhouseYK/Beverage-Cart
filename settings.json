@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-16T17:42:34.937Z",
+  "updatedAt": "2026-05-17T15:23:29.412Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -315,5 +315,8 @@
       "active": true
     }
   ],
-  "REFRESH_PASS": "Refresh123"
+  "REFRESH_PASS": "Refresh123",
+  "RECIPIENTS": [
+    "paul@copperhouse.ca"
+  ]
 }
