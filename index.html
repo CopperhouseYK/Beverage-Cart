@@ -2333,47 +2333,30 @@ function repopulateClosingFromSnapshot() {
 // After "Calculate & cashout" is clicked (closingSubmitted = true): actual —
 // uses physical closing counts (opening + restock − closing count) × price.
 function getNetStockValue() {
+  // Always use actual stock movement (opening + restocks − closing count).
+  // Staff are responsible for all stock taken, regardless of how much went
+  // through the POS. Net stock value × price is the basis for the cashout —
+  // any unrecorded sales surface as a positive cash-owed.
   const prod = activeProd();
   let val = 0;
-  const usingTheoretical = !closingSubmitted;
-
-  if(!closingSubmitted){
-    // ── Theoretical: POS sales × price ──────────────────────────────────────
-    // Packaged goods — sum qty sold per item from all POS orders
-    prod.forEach((grp, gi) => {
-      grp.items.filter(x => x.on).forEach((item, ii) => {
-        const posSoldQty = posOrders.reduce((s,o) =>
-          s + o.items.filter(i => !i.isLiq && i.gi===gi && i.ii===ii)
-                     .reduce((a,i) => a+i.qty, 0), 0);
-        val += posSoldQty * item.price;
-      });
+  // Packaged goods
+  prod.forEach((grp, gi) => {
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
+      const opening = getOpenCount(gi, ii);
+      let restock = 0;
+      for(let r = 1; r <= restockCount; r++) restock += getRestockCount(r, gi, ii);
+      const closing = getCloseCount(gi, ii);
+      val += Math.max(0, opening + restock - closing) * item.price;
     });
-    // Liquor — POS shot count × price/oz
-    activeLiq().forEach(l => {
-      const shotKey = posItemKey(l.name+'_shot');
-      const shotsSold = posOrders.reduce((s,o) =>
-        s + o.items.filter(i => i.isLiq && posItemKey(i.name+'_shot')===shotKey)
-                   .reduce((a,i) => a+i.qty, 0), 0);
-      val += shotsSold * l.price;
-    });
-  } else {
-    // ── Actual: physical closing count ──────────────────────────────────────
-    // Packaged goods — opening + restock − closing count
-    prod.forEach((grp, gi) => {
-      grp.items.filter(x => x.on).forEach((item, ii) => {
-        const opening = getOpenCount(gi, ii);
-        let restock = 0;
-        for(let r = 1; r <= restockCount; r++) restock += getRestockCount(r, gi, ii);
-        const closing = getCloseCount(gi, ii);
-        val += Math.max(0, opening + restock - closing) * item.price;
-      });
-    });
-    // Liquor — oz consumed from closing weights
-    const liqSoldData = getAllLiqSold();
-    liqSoldData.forEach(l => { val += l.totalOz * l.price; });
-  }
-
-  return {val, usingTheoretical};
+  });
+  // Liquor — oz consumed (start weight − end weight, or empty checkbox)
+  const liqSoldData = getAllLiqSold();
+  liqSoldData.forEach(l => { val += l.totalOz * l.price; });
+  // usingTheoretical flag retained for caller compatibility — surfaces a
+  // "closing not yet submitted" banner so staff know the numbers can still
+  // change as they enter closing counts.
+  return {val, usingTheoretical: !closingSubmitted};
 }
 
 // ── Build summary ─────────────────────────────────────────────────────────
@@ -2448,8 +2431,8 @@ function buildSummary() {
     </div>
 
     <div id="dTheoreticalNote" style="display:${usingTheoretical?'block':'none'};background:#fff8e1;border:1px solid var(--amber-b);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;line-height:1.6;color:#7a5f00;">
-      <strong>⚠ Closing count not yet entered</strong><br>
-      Net stock value is currently based on <strong>POS sales</strong> as a real-time estimate. Once you complete the closing count in the Closing tab, this will update to reflect actual physical stock on hand. The final reconciliation may differ if there were variances (missing stock, over/under pours).
+      <strong>⚠ Closing count not yet submitted</strong><br>
+      Reconciliation always uses <strong>actual stock movement</strong> (opening + restocks − closing count). Until you submit the closing count via the Closing tab, values shown reflect any closing counts entered so far and will finalize once locked.
     </div>
 
     <div class="sum-card">
@@ -2554,7 +2537,7 @@ function recalc(){
   const note=$('dTheoreticalNote'); if(note) note.style.display=usingTheoretical?'block':'none';
   const footNote=$('dStockNote');
   if(footNote) footNote.textContent = usingTheoretical
-    ? '* Based on POS sales — enter closing count for actual figures'
+    ? '* Opening + restocks − closing count × price (closing count not yet submitted — figures will finalize once locked)'
     : '* Opening + restocks − closing count × price';
 
   const mTotal = Math.max(0, gv('mCard')); // card total incl. tips entered on terminal
