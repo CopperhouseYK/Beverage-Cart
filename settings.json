@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:10:28.784Z",
+  "updatedAt": "2026-05-19T05:12:45.818Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -134,13 +134,13 @@
           "on": true
         },
         {
-          "name": "Diet Pepsi (mini can)",
-          "price": 2.5,
+          "name": "Pepsi (mini can)",
+          "price": 2.38,
           "on": true
         },
         {
-          "name": "Pepsi (mini can)",
-          "price": 2.5,
+          "name": "Diet Pepsi (mini can)",
+          "price": 2.38,
           "on": true
         }
       ]
@@ -151,47 +151,47 @@
       "items": [
         {
           "name": "Oh Henry! Bar",
-          "price": 3,
+          "price": 2.86,
           "on": true
         },
         {
           "name": "Mars Bar",
-          "price": 3,
+          "price": 2.86,
           "on": true
         },
         {
           "name": "KitKat Bar",
-          "price": 3,
+          "price": 2.86,
           "on": true
         },
         {
           "name": "Snickers Bar",
-          "price": 3,
+          "price": 2.86,
           "on": true
         },
         {
           "name": "Lay's Classic",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Lay's Salt & Vinegar",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Lay's Barbecue",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Doritos Nachos",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Assorted Sandwiches",
-          "price": 12,
+          "price": 12.38,
           "on": true
         }
       ]
