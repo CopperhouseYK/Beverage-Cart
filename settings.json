@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:06:15.604Z",
+  "updatedAt": "2026-05-19T05:06:27.085Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -213,7 +213,7 @@
     },
     {
       "name": "Patron Silver",
-      "price": 8,
+      "price": 8.57,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1440,
