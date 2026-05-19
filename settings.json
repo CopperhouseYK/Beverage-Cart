@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-17T15:23:29.412Z",
+  "updatedAt": "2026-05-19T05:06:15.604Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -205,7 +205,7 @@
   "LIQUOR": [
     {
       "name": "Jose Cuervo Gold",
-      "price": 6,
+      "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1260,
@@ -252,26 +252,11 @@
       "emptyWeight": 0
     },
     {
-      "name": "Sourpuss Raspberry",
-      "price": 8,
-      "on": true,
-      "bottleSizeMl": 750,
-      "fullWeight": 1360,
-      "emptyWeight": 0
-    },
-    {
       "name": "Sambuca",
       "price": 6,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1220
-    },
-    {
-      "name": "Jagermeister",
-      "price": 7,
-      "on": true,
-      "bottleSizeMl": 750,
-      "fullWeight": 1310
     }
   ],
   "SUPPLIES": [
