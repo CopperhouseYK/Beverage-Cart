@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:07:01.838Z",
+  "updatedAt": "2026-05-19T05:09:46.899Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -9,72 +9,72 @@
       "items": [
         {
           "name": "Kokanee (can)",
-          "price": 7.5,
+          "price": 7.14,
           "on": true
         },
         {
           "name": "Alexander Keith's (can)",
-          "price": 7.5,
+          "price": 7.14,
           "on": true
         },
         {
           "name": "Budweiser (can)",
-          "price": 7.5,
+          "price": 7.14,
           "on": true
         },
         {
           "name": "Coors Light (can)",
-          "price": 7.5,
+          "price": 7.14,
           "on": true
         },
         {
           "name": "NWT Brewing Tee Time (can)",
-          "price": 10,
+          "price": 9.52,
           "on": true
         },
         {
           "name": "Corona Extra (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Bud Light Tall (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Mott's Clamato Caesar (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Strongbow Cider (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Twisted Tea (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "White Claw (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Ole (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Dillon's Gin Cocktail (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         },
         {
           "name": "Happy Dad's Fruit Punch (can)",
-          "price": 10,
+          "price": 8.57,
           "on": true
         }
       ]
@@ -95,11 +95,6 @@
         },
         {
           "name": "Gatorade Red (bottle)",
-          "price": 4.5,
-          "on": true
-        },
-        {
-          "name": "Gatorade Blue (bottle)",
           "price": 4.5,
           "on": true
         },
