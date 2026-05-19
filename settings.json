@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:06:35.829Z",
+  "updatedAt": "2026-05-19T05:06:46.920Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -229,7 +229,7 @@
     },
     {
       "name": "Bacardi Black Rum",
-      "price": 7,
+      "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 980,
@@ -237,7 +237,7 @@
     },
     {
       "name": "Smirnoff Vodka",
-      "price": 7,
+      "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 960,
