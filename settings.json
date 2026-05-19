@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T06:05:22.732Z",
+  "updatedAt": "2026-05-19T17:19:12.411Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -292,6 +292,14 @@
       "email": "kheaphy@live.ca",
       "phone": "(867) 445-2712",
       "password": "KH2712",
+      "active": true
+    },
+    {
+      "id": "u1779211152410",
+      "fullName": "Ava Nystrom",
+      "email": "ava.nystrom@uleth.ca",
+      "phone": "(867) 446-9473",
+      "password": "AN9473",
       "active": true
     }
   ],
