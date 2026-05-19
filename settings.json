@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:09:46.899Z",
+  "updatedAt": "2026-05-19T05:10:28.784Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -85,52 +85,52 @@
       "items": [
         {
           "name": "Water (bottle)",
-          "price": 3,
+          "price": 2.86,
           "on": true
         },
         {
           "name": "Gatorade Orange (bottle)",
-          "price": 4.5,
+          "price": 4.29,
           "on": true
         },
         {
           "name": "Gatorade Red (bottle)",
-          "price": 4.5,
+          "price": 4.29,
           "on": true
         },
         {
           "name": "Gatorade G2 Purple (bottle)",
-          "price": 4.5,
+          "price": 4.29,
           "on": true
         },
         {
           "name": "Gatorade Zero Yellow (bottle)",
-          "price": 4.5,
+          "price": 4.29,
           "on": true
         },
         {
           "name": "Gatorade Zero Blue (bottle)",
-          "price": 4.5,
+          "price": 4.29,
           "on": true
         },
         {
           "name": "Pepsi (bottle)",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Diet Pepsi (bottle)",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Ginger Ale (bottle)",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
           "name": "Iced Tea (bottle)",
-          "price": 4,
+          "price": 3.81,
           "on": true
         },
         {
