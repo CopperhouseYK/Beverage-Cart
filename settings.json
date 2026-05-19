@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:13:37.154Z",
+  "updatedAt": "2026-05-19T06:05:22.732Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -223,7 +223,7 @@
       "emptyWeight": 0
     },
     {
-      "name": "Bacardi Black Rum",
+      "name": "Captain Morgan's Spiced Rum",
       "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
