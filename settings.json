@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T05:06:46.920Z",
+  "updatedAt": "2026-05-19T05:07:01.838Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -245,7 +245,7 @@
     },
     {
       "name": "Fireball Cinnamon Whisky",
-      "price": 7,
+      "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1300,
@@ -253,7 +253,7 @@
     },
     {
       "name": "Sambuca",
-      "price": 6,
+      "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1220
