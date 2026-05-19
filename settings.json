@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T17:19:52.096Z",
+  "updatedAt": "2026-05-19T18:48:52.993Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -297,7 +297,7 @@
     {
       "id": "u1779211152410",
       "fullName": "Ava Nystrom",
-      "email": "ava.nystrom@uleth.ca",
+      "email": "ava.nystrom@icloud.com",
       "phone": "(867) 446-9473",
       "password": "AN9473",
       "active": true
