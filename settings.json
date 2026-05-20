@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T22:27:46.034Z",
+  "updatedAt": "2026-05-20T22:31:49.191Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -342,7 +342,7 @@
     },
     {
       "name": "Monika Monika",
-      "pin": "6822",
+      "pin": "0401",
       "active": true
     },
     {
