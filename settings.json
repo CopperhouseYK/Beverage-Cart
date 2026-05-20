@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T17:41:10.139Z",
+  "updatedAt": "2026-05-20T18:45:27.797Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -293,6 +293,14 @@
       "email": "kheaphy@live.ca",
       "phone": "(867) 445-2712",
       "password": "KH2712",
+      "active": true
+    },
+    {
+      "id": "u1779302727797",
+      "fullName": "Rubal Kaur",
+      "email": "jassinokwal88@gmail.com",
+      "phone": "(778) 723-6203",
+      "password": "RK6203",
       "active": true
     }
   ],
