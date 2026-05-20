@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T22:25:24.128Z",
+  "updatedAt": "2026-05-20T22:26:11.042Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -317,6 +317,14 @@
       "email": "ava.nystrom@icloud.com",
       "phone": "(867) 446-9473",
       "password": "AN9473",
+      "active": true
+    },
+    {
+      "id": "u1779315971041",
+      "fullName": "Monika Monika",
+      "email": "monikajhim6@gmail.com",
+      "phone": "(514) 605-6822",
+      "password": "MM6822",
       "active": true
     }
   ],
