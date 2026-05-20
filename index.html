@@ -194,6 +194,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .mon-input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:'DM Mono',monospace;font-size:20px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:12px;}
 .mon-input:last-of-type{margin-bottom:0;}
 .mon-input:focus{border-color:var(--green);background:white;}
+.mon-input.mcard-empty{border-color:var(--amber);background:#fff8e1;box-shadow:0 0 0 2px rgba(212,165,30,.18);}
+.mon-input.mcard-empty:focus{border-color:var(--amber);}
 .cash-box{background:var(--gold-pale);border:2px solid var(--gold);border-radius:14px;padding:20px;margin-bottom:14px;text-align:center;}
 .cash-lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:6px;}
 .cash-amt{font-family:'DM Mono',monospace;font-size:42px;font-weight:500;color:var(--gold);letter-spacing:-.02em;}
@@ -338,8 +340,6 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 .admin-save-bar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);padding:12px 20px;max-width:600px;margin:0 auto;z-index:10;}
 
 /* Unlock closing modal — same styling as the admin password modal */
-#unlockClosingModal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
-#unlockClosingModal.open{display:flex;}
 /* Admin password modal */
 #pwModal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
 #pwModal.open{display:flex;}
@@ -495,6 +495,12 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 /* Restock summary modal — same structure */
 #restockSummaryModal{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.55);align-items:flex-end;justify-content:center;}
 #restockSummaryModal.open{display:flex;}
+/* Closing summary modal — same structure */
+#closingSummaryModal{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.55);align-items:flex-end;justify-content:center;}
+#closingSummaryModal.open{display:flex;}
+/* Manager approval modal — same as the admin pw modal but on top */
+#mgrApprovalModal{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+#mgrApprovalModal.open{display:flex;}
 .opening-summary-box{background:white;border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:85vh;display:flex;flex-direction:column;}
 .opening-summary-hdr{padding:20px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .opening-summary-hdr h3{font-size:17px;font-weight:600;margin-bottom:4px;}
@@ -634,20 +640,6 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   </div>
 </div>
 
-<!-- ══ UNLOCK CLOSING MODAL ════════════════════════════════ -->
-<div id="unlockClosingModal">
-  <div class="pw-box">
-    <h3>Unlock closing count</h3>
-    <p>Enter the unlock PIN to re-open the closing count for edits. Values currently submitted will be retained so you only need to correct what changed.</p>
-    <input type="password" id="unlockClosingPin" placeholder="PIN"
-      inputmode="numeric" pattern="[0-9]*" maxlength="4"
-      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-      onkeydown="if(event.key==='Enter')confirmUnlockClosing()">
-    <div class="pw-error" id="unlockClosingError">Incorrect PIN. Try again.</div>
-    <button class="btn-primary" style="margin-top:0" onclick="confirmUnlockClosing()">Unlock</button>
-    <button class="btn-secondary" style="margin-top:8px" onclick="closeUnlockClosingModal()">Cancel</button>
-  </div>
-</div>
 <!-- ══ PASSWORD MODAL ══════════════════════════════════════ -->
 <div id="pwModal">
   <div class="pw-box">
@@ -669,6 +661,7 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
     </div>
     <div class="admin-tabs">
       <div class="admin-tab active" id="atab-users"    onclick="switchAdminTab('users')">Users</div>
+      <div class="admin-tab"        id="atab-managers" onclick="switchAdminTab('managers')">Managers</div>
       <div class="admin-tab"        id="atab-products" onclick="switchAdminTab('products')">Products</div>
       <div class="admin-tab"        id="atab-liquor"   onclick="switchAdminTab('liquor')">Liquor</div>
       <div class="admin-tab"        id="atab-supplies" onclick="switchAdminTab('supplies')">Supplies</div>
@@ -683,6 +676,25 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
           <button class="add-item-btn" onclick="openUserPopup(null)" style="flex-shrink:0;margin-left:10px">+ Add user</button>
         </div>
         <div id="adminUsers"></div>
+      </div>
+      <!-- ── MANAGERS TAB ── -->
+      <div class="admin-tab-panel" id="apanel-managers">
+        <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px">
+          Managers can approve lock/unlock events with their personal PIN. Each entry below grants approval authority.
+        </p>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;cursor:pointer">
+          <input type="checkbox" id="requireManagerApproval" style="width:18px;height:18px;accent-color:var(--green)">
+          <span style="font-size:13px;color:var(--ink)">Require manager approval for locking and unlocking stock counts</span>
+        </label>
+        <div id="adminManagers"></div>
+        <div style="background:var(--green-pale);border:1px dashed var(--green-mid);border-radius:12px;padding:14px;margin-top:4px">
+          <p style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:10px">+ Add manager</p>
+          <div style="display:grid;grid-template-columns:1fr 100px auto;gap:6px">
+            <input type="text" id="newManagerName" placeholder="Manager name" autocapitalize="words" style="padding:7px 10px;border:1px solid var(--green-mid);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:white;outline:none;">
+            <input type="text" id="newManagerPin" placeholder="PIN (4–6)" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" style="padding:7px 10px;border:1px solid var(--green-mid);border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;background:white;outline:none;text-align:center;">
+            <button class="add-item-btn" style="background:var(--green-pale);color:var(--green);border-color:var(--green-mid)" onclick="addManager()">+ Add</button>
+          </div>
+        </div>
       </div>
       <!-- ── PRODUCTS TAB ── -->
       <div class="admin-tab-panel" id="apanel-products">
@@ -918,7 +930,8 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   <div class="info-banner">Items are grouped by category. Each item shows its individual price — no manual math needed.</div>
   <div id="openingLockedBanner" style="display:none" class="locked-banner">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    Opening stock is locked. Add any additional items through the Restock tab.
+    <span style="flex:1">Opening stock is locked. Add any additional items through the Restock tab.</span>
+    <button onclick="unlockOpening()" style="background:white;border:1px solid var(--green);color:var(--green);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;">Unlock (Manager PIN)</button>
   </div>
   <div id="openingGroups"></div>
   <div class="nav-row" id="openingNavRow">
@@ -946,7 +959,7 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   <div id="closingLockedBanner" style="display:none" class="locked-banner">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     <span style="flex:1">Closing count has been submitted and locked.</span>
-    <button onclick="openUnlockClosingModal()" style="background:white;border:1px solid var(--green);color:var(--green);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;">Unlock (PIN)</button>
+    <button onclick="openUnlockClosingModal()" style="background:white;border:1px solid var(--green);color:var(--green);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;">Unlock (Manager PIN)</button>
   </div>
   <div id="closingGroups"></div>
   <div class="nav-row">
@@ -1109,6 +1122,37 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   </div>
 </div>
 
+<!-- ══ CLOSING SUMMARY MODAL ════════════════════════════════ -->
+<div id="closingSummaryModal">
+  <div class="opening-summary-box">
+    <div class="opening-summary-hdr">
+      <h3>Review closing count</h3>
+      <p>Confirm the counts below before locking. Manager approval is required.</p>
+    </div>
+    <div class="opening-summary-scroll" id="closingSummaryBody"></div>
+    <div class="opening-summary-ftr">
+      <button class="btn-secondary" onclick="closeClosingSummary()">← Go back &amp; edit</button>
+      <button class="btn-primary" onclick="confirmAndLockClosing()">Confirm &amp; lock →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MANAGER APPROVAL MODAL ═══════════════════════════════ -->
+<div id="mgrApprovalModal">
+  <div class="pw-box">
+    <h3>Manager approval required</h3>
+    <p id="mgrApprovalLabel" style="font-weight:600;color:var(--ink)">Action label</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:-8px">Enter a manager PIN to authorize this action.</p>
+    <input type="password" id="mgrApprovalPin" placeholder="Manager PIN"
+      inputmode="numeric" pattern="[0-9]*" maxlength="6"
+      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+      onkeydown="if(event.key==='Enter')confirmMgrApproval()">
+    <div class="pw-error" id="mgrApprovalError">Incorrect PIN — manager not recognized or inactive.</div>
+    <button class="btn-primary" style="margin-top:0" onclick="confirmMgrApproval()">Approve</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeMgrApprovalModal()">Cancel</button>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════
      JAVASCRIPT
 ═══════════════════════════════════════════════════════════ -->
@@ -1130,6 +1174,15 @@ const GH_FILE   = 'settings.json';
 const WORKER_URL = 'https://beverage-cart-sync.accounting-0d6.workers.dev';
 // Email Distribution list — configurable via admin panel. Saved to settings.json.
 let RECIPIENTS = ['paul@copperhouse.ca'];
+// Manager approval — list of {name, pin, active} entries.
+// Configurable in Admin → Managers. Synced via settings.json.
+let MANAGERS = [];
+let REQUIRE_MANAGER_APPROVAL = false;
+// Chronological audit log of lock/unlock events for the shift.
+// Each entry: { stage, action: 'lock'|'unlock', manager, time }
+let approvalEvents = [];
+// State for the manager-approval modal — set by requestManagerApproval()
+let _pendingApproval = null;
 const ADMIN_PASS   = 'Admin123';
 // Refresh password — used to clear shift data. Separate from admin password.
 let REFRESH_PASS = 'Refresh123';
@@ -1282,6 +1335,7 @@ function confirmNewShift(){
     endTime = '';
     currentUser = null;
     window._sd = null;
+    approvalEvents = [];
   } catch(e){
     console.warn('Could not reset globals (continuing anyway):', e);
   }
@@ -1353,6 +1407,9 @@ async function fetchSettingsFromGitHub(){
     if(settings.SUPPLIES)     SUPPLIES     = settings.SUPPLIES;
     if(settings.REFRESH_PASS) REFRESH_PASS = settings.REFRESH_PASS;
     if(settings.RECIPIENTS)   RECIPIENTS   = settings.RECIPIENTS;
+    if(Array.isArray(settings.MANAGERS)) MANAGERS = settings.MANAGERS;
+    if(typeof settings.REQUIRE_MANAGER_APPROVAL === 'boolean')
+      REQUIRE_MANAGER_APPROVAL = settings.REQUIRE_MANAGER_APPROVAL;
     if(settings.USERS){
       settings.USERS.forEach(u => {
         const existing = USERS.find(x => x.email.toLowerCase() === u.email.toLowerCase());
@@ -1384,7 +1441,8 @@ async function pushSettingsToGitHub(){
     version: 1,
     updatedAt: new Date().toISOString(),
     updatedBy: currentUser ? currentUser.email : 'unknown',
-    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS, RECIPIENTS
+    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS, RECIPIENTS,
+    MANAGERS, REQUIRE_MANAGER_APPROVAL
   };
   const body = JSON.stringify(settings, null, 2);
   const encoded = btoa(unescape(encodeURIComponent(body)));
@@ -1417,7 +1475,8 @@ function exportSettings(){
   const settings={
     version:1,
     exportedAt: new Date().toISOString(),
-    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS, RECIPIENTS
+    PRODUCTS, LIQUOR, SUPPLIES, USERS, REFRESH_PASS, RECIPIENTS,
+    MANAGERS, REQUIRE_MANAGER_APPROVAL
   };
   const blob=new Blob([JSON.stringify(settings,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -1439,6 +1498,9 @@ function importSettings(input){
       LIQUOR=s.LIQUOR;
       SUPPLIES=s.SUPPLIES;
       if(s.RECIPIENTS) RECIPIENTS=s.RECIPIENTS;
+      if(Array.isArray(s.MANAGERS)) MANAGERS = s.MANAGERS;
+      if(typeof s.REQUIRE_MANAGER_APPROVAL === 'boolean')
+        REQUIRE_MANAGER_APPROVAL = s.REQUIRE_MANAGER_APPROVAL;
       // Merge users: keep existing passwords, add new users from import
       s.USERS.forEach(u=>{
         const existing=USERS.find(x=>x.email.toLowerCase()===u.email.toLowerCase());
@@ -2048,8 +2110,9 @@ function lockRestockRound(n) {
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Restock ${n}
       </div>
-      <span style="display:flex;align-items:center;gap:8px;font-size:11px;opacity:.85">
+      <span style="display:flex;align-items:center;gap:6px;font-size:11px;opacity:.85">
         ${ts}
+        <button onclick="event.stopPropagation();unlockRestockRound(${n});" style="background:white;border:1px solid var(--green);color:var(--green);padding:3px 9px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;opacity:1;">Unlock</button>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="rrChevron${n}" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
       </span>`;
     hdr.onclick = () => toggleRestockBody(n);
@@ -2094,20 +2157,23 @@ function closeOpeningSummary() {
 }
 
 function confirmAndLockOpening() {
-  closeOpeningSummary();
-  openingCounts = {};
-  activeProd().forEach((grp, gi) => {
-    grp.items.forEach((item, ii) => {
-      if(!item.on) return;
-      const qty = parseInt(($(`open_g${gi}_i${ii}`) || {}).value) || 0;
-      if(qty > 0) openingCounts[`${gi}_${ii}`] = qty;
+  requestManagerApproval('Lock opening counts', (managerName) => {
+    recordApprovalEvent('opening', 'lock', managerName);
+    closeOpeningSummary();
+    openingCounts = {};
+    activeProd().forEach((grp, gi) => {
+      grp.items.forEach((item, ii) => {
+        if(!item.on) return;
+        const qty = parseInt(($(`open_g${gi}_i${ii}`) || {}).value) || 0;
+        if(qty > 0) openingCounts[`${gi}_${ii}`] = qty;
+      });
     });
+    openingLocked = true;
+    recomputeInventory();
+    applyOpeningLockUI();
+    autosave();
+    goStep(6);
   });
-  openingLocked = true;
-  recomputeInventory(); // derive from opening counts − sold
-  applyOpeningLockUI();
-  autosave();
-  goStep(6); // go straight to POS after confirming opening stock
 }
 
 function buildOpeningSummary() {
@@ -2184,21 +2250,20 @@ function closeRestockSummary() {
 
 function confirmAndLockRestock() {
   const n = _pendingRestockN;
-  closeRestockSummary();
-  if(n !== null) {
+  if(n === null) return;
+  requestManagerApproval(`Lock restock #${n}`, (managerName) => {
+    recordApprovalEvent('restock' + n, 'lock', managerName);
+    closeRestockSummary();
     lockRestockRound(n);
     if(_pendingRestockCb){
-      // Called from auto-lock (e.g. adding new round or proceeding to closing) — run the callback
       _pendingRestockCb();
     } else {
-      // Normal lock from "Confirm restock" button — go to POS
       goStep(6);
     }
-    // Update add button state
     if(restockCount >= MAX_RESTOCK){
       const b=$('addRestockBtn'); if(b){ b.textContent='Max 10 restock rounds reached'; b.disabled=true; }
     }
-  }
+  });
 }
 
 function buildRestockSummary(n) {
@@ -2280,70 +2345,297 @@ function lockLastRestock(cb) {
   return true;
 }
 
-// Closing-count unlock PIN — allows staff to re-open a submitted closing
-// count for corrections without starting a new shift.
-const UNLOCK_PIN = '1234';
-
-function openUnlockClosingModal(){
-  $('unlockClosingPin').value = '';
-  $('unlockClosingError').style.display = 'none';
-  $('unlockClosingModal').classList.add('open');
-  setTimeout(() => $('unlockClosingPin').focus(), 100);
+// ── Manager approval ─────────────────────────────────────────────────────
+// Validates a PIN against the active managers list. Returns the manager
+// name on success, or null if no active manager has that PIN.
+function validateManagerPin(pin){
+  const p = (pin||'').trim();
+  if(!p) return null;
+  const m = MANAGERS.find(x => x && x.active && (x.pin||'').trim() === p);
+  return m ? (m.name || 'Manager') : null;
 }
-function closeUnlockClosingModal(){
-  $('unlockClosingModal').classList.remove('open');
+// Push a lock/unlock event onto the audit log, with the current time.
+function recordApprovalEvent(stage, action, managerName){
+  approvalEvents.push({
+    stage,
+    action,
+    manager: managerName || '(approval disabled)',
+    time: nowStr()
+  });
 }
-function confirmUnlockClosing(){
-  if(($('unlockClosingPin').value||'').trim() !== UNLOCK_PIN){
-    $('unlockClosingError').style.display = 'block';
-    $('unlockClosingPin').value = '';
-    $('unlockClosingPin').focus();
+// Format the manager-approval audit log for inclusion in the email body.
+// Returns a string starting with a leading newline so it sits between
+// SHIFT INFO and SALES BREAKDOWN. Empty string if there are no events.
+function buildApprovalLogSection(){
+  if(!approvalEvents || !approvalEvents.length) return '';
+  const stageLabel = (stage) => {
+    if(stage === 'opening') return 'Opening counts';
+    if(stage === 'closing') return 'Closing counts';
+    if(/^restock(\d+)$/.test(stage)) return 'Restock #' + stage.replace('restock','');
+    return stage;
+  };
+  const rows = approvalEvents.map(ev => {
+    const t   = (ev.time || '').padEnd(9);
+    const lbl = stageLabel(ev.stage).padEnd(20);
+    const act = (ev.action === 'unlock' ? 'UNLOCKED' : 'LOCKED').padEnd(10);
+    const by  = ev.manager ? ('by ' + ev.manager) : '';
+    return `  ${t} ${lbl} ${act} ${by}`.trimEnd();
+  });
+  return `
+APPROVAL LOG
+${'─'.repeat(74)}
+${rows.join('\n')}
+`;
+}
+// Show the manager-approval modal. label = the action being approved
+// (e.g. "Lock opening counts"). onApprove receives the manager name on success.
+// If REQUIRE_MANAGER_APPROVAL is off, or there are no active managers,
+// onApprove is called immediately with name = null.
+function requestManagerApproval(label, onApprove){
+  const hasActive = MANAGERS.some(m => m && m.active);
+  if(!REQUIRE_MANAGER_APPROVAL || !hasActive){
+    onApprove(null);
     return;
   }
-  // Capture closing values from the DOM BEFORE we mutate snapshot/state, so
-  // re-rendering the closing tab preserves them visually for editing.
-  const preservedCloseValues = {};
-  Object.entries(closingCounts).forEach(([key, qty]) => {
-    const [gi, ii] = key.split('_');
-    const el = $(`close_g${gi}_i${ii}`);
-    if(el && el.value) preservedCloseValues[el.id] = el.value;
+  _pendingApproval = { label, onApprove };
+  $('mgrApprovalLabel').textContent = label;
+  $('mgrApprovalPin').value = '';
+  $('mgrApprovalError').style.display = 'none';
+  $('mgrApprovalModal').classList.add('open');
+  setTimeout(() => $('mgrApprovalPin').focus(), 100);
+}
+function closeMgrApprovalModal(){
+  $('mgrApprovalModal').classList.remove('open');
+  _pendingApproval = null;
+}
+function confirmMgrApproval(){
+  const pin = $('mgrApprovalPin').value || '';
+  const name = validateManagerPin(pin);
+  if(!name){
+    $('mgrApprovalError').style.display = 'block';
+    $('mgrApprovalPin').value = '';
+    $('mgrApprovalPin').focus();
+    return;
+  }
+  const pending = _pendingApproval;
+  closeMgrApprovalModal();
+  if(pending && typeof pending.onApprove === 'function') pending.onApprove(name);
+}
+
+// ── Closing-count unlock ─────────────────────────────────────────────────
+function openUnlockClosingModal(){
+  // Now uses the manager-approval flow instead of a static PIN
+  requestManagerApproval('Unlock closing counts', (managerName) => {
+    recordApprovalEvent('closing', 'unlock', managerName);
+    // Clear the snapshot + lock state (DOM values are preserved by renderInv)
+    closingCounts = {};
+    closingSubmitted = false;
+    // Clear stale cashout summary and email status
+    const sc = $('summaryContent'); if(sc) sc.innerHTML = '';
+    const emailStatus = $('emailStatus'); if(emailStatus) emailStatus.innerHTML = '';
+    window._sd = null;
+    // Reset send button state
+    const sendBtn = $('sendBtn');
+    if(sendBtn){
+      sendBtn.disabled = false;
+      sendBtn.style.background = '';
+      sendBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send report`;
+    }
+    // Hide locked banner and re-show closing nav buttons
+    const banner = $('closingLockedBanner');
+    if(banner) banner.style.display = 'none';
+    const step4 = $('step4');
+    if(step4){
+      const navRow = step4.querySelector('.nav-row');
+      if(navRow) navRow.querySelectorAll('button').forEach(b => { b.style.display = ''; });
+    }
+    renderInv('closingGroups', 'close');
+    renderPosHome();
+    goStep(4);
+    autosave();
   });
-  // Clear the snapshot + lock state
-  closingCounts = {};
-  closingSubmitted = false;
-  // Clear stale cashout summary and email status so the user gets a fresh
-  // cashout once they re-submit
-  const sc = $('summaryContent'); if(sc) sc.innerHTML = '';
-  const emailStatus = $('emailStatus'); if(emailStatus) emailStatus.innerHTML = '';
-  window._sd = null;
-  // Reset send button state in case it had been "Sent" or "Retry"
-  const sendBtn = $('sendBtn');
-  if(sendBtn){
-    sendBtn.disabled = false;
-    sendBtn.style.background = '';
-    sendBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send report`;
-  }
-  // Hide locked banner and re-show closing nav buttons
-  const banner = $('closingLockedBanner');
-  if(banner) banner.style.display = 'none';
-  const step4 = $('step4');
-  if(step4){
-    const navRow = step4.querySelector('.nav-row');
-    if(navRow) navRow.querySelectorAll('button').forEach(b => { b.style.display = ''; });
-  }
-  // Re-render closing tab — renderInv's generic preserve mechanism will
-  // restore the captured values into the new inputs
-  renderInv('closingGroups', 'close');
-  // Re-render POS so the "+ New order" button comes back
-  renderPosHome();
-  // Close modal, navigate to Closing tab, persist state
-  closeUnlockClosingModal();
-  goStep(4);
-  autosave();
+}
+// Legacy entrypoint retained for backwards compatibility — now just routes
+// through the new manager-approval flow above.
+function closeUnlockClosingModal(){ /* no-op — manager modal handles closing */ }
+function confirmUnlockClosing(){ openUnlockClosingModal(); }
+// Unlock opening counts — requires manager approval, then re-opens for edits.
+function unlockOpening(){
+  requestManagerApproval('Unlock opening counts', (managerName) => {
+    recordApprovalEvent('opening', 'unlock', managerName);
+    openingCounts = {};
+    openingLocked = false;
+    // Hide opening locked banner, re-show confirm buttons
+    const banner = $('openingLockedBanner'); if(banner) banner.style.display='none';
+    const confirmBtn = $('confirmOpeningBtn'); if(confirmBtn) confirmBtn.style.display='';
+    const navRow = $('openingNavRow');
+    if(navRow){
+      const backBtn = navRow.querySelector('.btn-secondary');
+      if(backBtn) backBtn.style.display='';
+    }
+    // Re-render opening tab — generic preserve restores DOM values
+    renderInv('openingGroups', 'open');
+    renderPosHome();
+    goStep(2);
+    autosave();
+  });
+}
+// Unlock a specific restock round — requires manager approval.
+function unlockRestockRound(n){
+  requestManagerApproval(`Unlock restock #${n}`, (managerName) => {
+    recordApprovalEvent('restock' + n, 'unlock', managerName);
+    lockedRestocks.delete(n);
+    if(restockCounts[n]) restockCounts[n] = {};
+    // Re-enable the round's inputs and restore its expand UI
+    const round = $('rr' + n);
+    if(round){
+      round.classList.remove('locked');
+      round.querySelectorAll('input, select').forEach(el => {
+        el.disabled = false;
+        el.style.pointerEvents = '';
+        el.style.opacity = '';
+      });
+      // Expand the body if collapsed
+      const body = $('rrBody' + n);
+      if(body && body.classList.contains('collapsed')){
+        body.classList.remove('collapsed');
+        body.style.maxHeight = '';
+      }
+      // Replace the locked header with the original (re-render the whole round)
+      // The cleanest path is just to rebuild this round's HTML, but to keep this
+      // minimal we update the header DOM in place.
+      const hdr = round.querySelector('.restock-hdr');
+      if(hdr){
+        hdr.classList.remove('locked');
+        hdr.innerHTML = `Restock round ${n} <span style="opacity:.7;font-weight:400;font-size:11px">items added</span>`;
+        hdr.onclick = null;
+      }
+      // Re-create the Confirm restock button if missing
+      if(!$('lockRestockBtn' + n)){
+        const btn = document.createElement('button');
+        btn.className = 'lock-restock-btn';
+        btn.id = 'lockRestockBtn' + n;
+        btn.onclick = () => showRestockSummary(n);
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Confirm restock ${n}`;
+        // Append at the end of rrBody so it shows after all the rows
+        if(body) body.appendChild(btn);
+      }
+      // Restore the spirit picker if missing
+      if(!$('restockLiqPicker_wrap_' + n)){
+        const pickerWrap = document.createElement('div');
+        pickerWrap.style.cssText = 'padding:6px 14px 12px;display:flex;gap:8px;align-items:center';
+        pickerWrap.id = 'restockLiqPicker_wrap_' + n;
+        pickerWrap.innerHTML = `
+          <select id="restockLiqPicker_${n}" style="flex:1;padding:8px 10px;border:1px solid var(--amber-b);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--amber-pale);color:var(--ink);outline:none;">
+            <option value="">— Add a spirit —</option>
+            ${activeLiq().map((l,li)=>`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`).join('')}
+          </select>
+          <button class="add-item-btn" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber-b);flex-shrink:0" onclick="addRestockLiq(${n})">+ Add</button>`;
+        const liqRowsContainer = $(`restockLiqRows_${n}`);
+        if(liqRowsContainer && liqRowsContainer.parentNode){
+          liqRowsContainer.parentNode.insertBefore(pickerWrap, liqRowsContainer.nextSibling);
+        }
+      }
+      // Show remove buttons on liquor entries again
+      renderRestockLiqRows(n);
+    }
+    recomputeInventory();
+    autosave();
+  });
 }
 
 function proceedToClosing() {
-  const proceed = () => {
+  // First make sure any open restock round is locked, then show the closing
+  // summary modal for review + manager approval (manager approves on the
+  // "Confirm & lock" inside the summary modal).
+  const showSummary = () => {
+    buildClosingSummary();
+    $('closingSummaryModal').classList.add('open');
+  };
+  lockLastRestock(showSummary);
+}
+function closeClosingSummary(){
+  $('closingSummaryModal').classList.remove('open');
+}
+// Build the closing summary modal contents from current DOM values.
+function buildClosingSummary(){
+  const body = $('closingSummaryBody');
+  if(!body) return;
+  let html = '';
+  let anyItem = false;
+  // Packaged goods — show every session item with its current closing count
+  activeProd().forEach((grp, gi) => {
+    const rows = [];
+    grp.items.forEach((item, ii) => {
+      if(!item.on) return;
+      // Only show items that were in opening or restock
+      const opening = openingCounts[`${gi}_${ii}`] || 0;
+      let totalRestock = 0;
+      for(let r = 1; r <= restockCount; r++) totalRestock += (restockCounts[r] || {})[`${gi}_${ii}`] || 0;
+      const available = opening + totalRestock;
+      if(available === 0) return;
+      const closing = parseInt(($(`close_g${gi}_i${ii}`) || {}).value) || 0;
+      rows.push({ name: item.name, closing, available });
+    });
+    if(!rows.length) return;
+    anyItem = true;
+    html += `<div class="opening-sum-group">
+      <div class="opening-sum-label">${escH(grp.group)}</div>`;
+    rows.forEach(r => {
+      const sold = Math.max(0, r.available - r.closing);
+      html += `<div class="opening-sum-row">
+        <span>${escH(r.name)}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">avail ${r.available} · sold ${sold}</span>
+        <span class="opening-sum-qty">${r.closing} left</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  // Liquor — show closing weight or Empty for each bottle
+  const liqRows = [];
+  selectedLiquor.forEach((entry, si) => {
+    const liq = LIQUOR[entry.liqIndex]; if(!liq) return;
+    const closeEl = $(`liq_open_${si}_close`);
+    const closeW = closeEl ? (parseFloat(closeEl.value)||entry.closeW||0) : (entry.closeW||0);
+    const emptyEl = $(`liq_open_${si}_empty`);
+    const isEmpty = emptyEl ? emptyEl.checked : (entry.isEmpty||false);
+    liqRows.push({ name: liq.name, src: 'open', si, closeW, isEmpty });
+  });
+  Object.entries(restockLiquor).forEach(([n, bottles]) => {
+    bottles.forEach((entry, bi) => {
+      const liq = LIQUOR[entry.liqIndex]; if(!liq) return;
+      const closeEl = $(`liq_r${n}_${bi}_close`);
+      const closeW = closeEl ? (parseFloat(closeEl.value)||entry.closeW||0) : (entry.closeW||0);
+      const emptyEl = $(`liq_r${n}_${bi}_empty`);
+      const isEmpty = emptyEl ? emptyEl.checked : (entry.isEmpty||false);
+      liqRows.push({ name: `${liq.name} (restock #${n})`, src: 'restock', n, bi, closeW, isEmpty });
+    });
+  });
+  if(liqRows.length){
+    anyItem = true;
+    html += `<div class="opening-sum-group">
+      <div class="opening-sum-label">Liquor / Shots</div>`;
+    liqRows.forEach(r => {
+      const wDisplay = r.isEmpty ? 'Empty' : (r.closeW ? r.closeW + 'g' : '—');
+      html += `<div class="opening-sum-row">
+        <span>${escH(r.name)}</span>
+        <span class="opening-sum-qty liq">${wDisplay}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  if(!anyItem){
+    html = `<div class="opening-sum-empty">No closing counts entered.<br>Go back and count remaining stock before confirming.</div>`;
+  }
+  body.innerHTML = html;
+}
+// Confirm & lock closing — wraps the previous proceedToClosing body in a
+// manager-approval call, fired from the "Confirm & lock" button in the
+// closing summary modal.
+function confirmAndLockClosing(){
+  requestManagerApproval('Lock closing counts', (managerName) => {
+    recordApprovalEvent('closing', 'lock', managerName);
+    closeClosingSummary();
     // Snapshot closing counts so they survive re-renders and can't be changed later
     closingCounts = {};
     activeProd().forEach((grp, gi) => {
@@ -2353,7 +2645,6 @@ function proceedToClosing() {
         if(qty > 0) closingCounts[`${gi}_${ii}`] = qty;
       });
     });
-    // Snapshot liquor closing weights and isEmpty flags into the entries
     selectedLiquor.forEach((entry, si) => {
       const closeEl = $(`liq_open_${si}_close`);
       const emptyEl = $(`liq_open_${si}_empty`);
@@ -2373,8 +2664,7 @@ function proceedToClosing() {
     stampEnd();
     buildSummary();
     goStep(5);
-  };
-  lockLastRestock(proceed);
+  });
 }
 
 // Apply visual lock on the Closing tab — disable inputs and hide Submit button.
@@ -2506,8 +2796,9 @@ function buildSummary() {
     </div>
 
     <div class="mon-block">
-      <label>Total card payments (including tips)</label>
-      <input class="mon-input" type="number" id="mCard" placeholder="0.00" inputmode="decimal" step="0.01" min="0" oninput="recalc()" onblur="formatDollarInput(this)">
+      <label>Total card payments (including tips) <span style="color:var(--red);font-weight:600;">*</span></label>
+      <input class="mon-input mcard-required" type="number" id="mCard" placeholder="Enter amount (or 0 if none)" inputmode="decimal" step="0.01" min="0" oninput="recalc();updateMCardWarning();" onblur="formatDollarInput(this);updateMCardWarning();">
+      <div id="mCardHint" style="font-size:11px;color:var(--amber);margin-top:4px;font-family:'DM Sans',sans-serif;line-height:1.4;">Required — enter <strong>0</strong> explicitly if there were no card payments this shift.</div>
       <input type="hidden" id="mTips" value="0">
     </div>
 
@@ -2587,6 +2878,7 @@ function buildSummary() {
 
   recalc(); // populate reconciliation fields immediately on render
   updateSignatureWarning();
+  updateMCardWarning();
   updateNotesCounter();
 
   // Show the actual recipient list including the logged-in user's email
@@ -2722,6 +3014,23 @@ function updateSignatureWarning(){
   }
 }
 
+// Show an amber border + hint on the mCard input while it's empty.
+// Cart staff must enter 0 explicitly when there were no card payments.
+function isMCardEmpty(){
+  const el = $('mCard');
+  if(!el) return false;
+  const v = (el.value || '').trim();
+  return v === '';
+}
+function updateMCardWarning(){
+  const el = $('mCard');
+  const hint = $('mCardHint');
+  if(!el) return;
+  const empty = isMCardEmpty();
+  el.classList.toggle('mcard-empty', empty);
+  if(hint) hint.style.display = empty ? '' : 'none';
+}
+
 // Capture the signature canvas as a base64 PNG data URL with a white background.
 // Returns '' if the canvas is empty (no signature drawn).
 function getSignatureDataUrl(){
@@ -2819,6 +3128,14 @@ async function sendReport(){
     showStatus('error','Closing count has not been submitted yet.\n\nGo to the "4 · Closing" tab, count remaining stock, and tap "Calculate & cashout →" before sending the report.');
     return;
   }
+  // Total card payments must be entered explicitly — empty is not the same as 0
+  if(isMCardEmpty()){
+    showStatus('error','✗ Card payments amount required. If there were no card payments this shift, enter 0 explicitly in the "Total card payments (including tips)" field.');
+    updateMCardWarning();
+    const el = $('mCard');
+    if(el){ el.focus(); try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }
+    return;
+  }
   // Signature required
   const _sigUrlEarly = getSignatureDataUrl();
   if(!_sigUrlEarly){
@@ -2913,6 +3230,9 @@ async function sendReport(){
   // Email subject
   const email_subject = `Daily Beverage Cart Report - ${sd.dateS}`;
 
+  // Manager approval audit log (Shift Info → Approval Log → Sales Breakdown)
+  const approvalSection = buildApprovalLogSection();
+
   // Email body
   const body = `BEVERAGE CART DAILY REPORT
 The Swinger's Club Golf Course
@@ -2924,7 +3244,7 @@ Staff:        ${sd.name}
 Date:         ${sd.dateS}
 Start time:   ${sd.startT}
 End time:     ${sd.endT}
-
+${approvalSection}
 SALES BREAKDOWN
 ${'─'.repeat(74)}
 ${itemsText || '  (no packaged items sold)'}${liqText ? '\n\nLIQUOR / SHOTS\n'+liqText : ''}
@@ -3264,7 +3584,9 @@ function openAdmin(){
     liquor:JSON.parse(JSON.stringify(LIQUOR)),
     supplies:[...SUPPLIES],
     users:JSON.parse(JSON.stringify(USERS)),
-    recipients:[...RECIPIENTS]
+    recipients:[...RECIPIENTS],
+    managers:JSON.parse(JSON.stringify(MANAGERS||[])),
+    requireManagerApproval: !!REQUIRE_MANAGER_APPROVAL
   };
   const rpd=$('refreshPwDisplay'); if(rpd) rpd.value=REFRESH_PASS;
   renderAdmin();
@@ -3407,6 +3729,12 @@ function renderAdmin(){
   });
   if(!draft.recipients) draft.recipients = [...RECIPIENTS];
   renderAdminRecipients();
+
+  // ── Managers ──
+  if(!draft.managers) draft.managers = [];
+  const reqEl = $('requireManagerApproval');
+  if(reqEl) reqEl.checked = !!draft.requireManagerApproval;
+  renderAdminManagers();
 }
 
 function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -3437,6 +3765,8 @@ function syncDraftInputs(){
       if(el) draft.recipients[idx] = (el.value||'').trim().toLowerCase();
     });
   }
+  // Managers (sync rows + requirement toggle)
+  syncManagersFromInputs();
   // Users are edited via popup — no inline inputs to sync
 }
 
@@ -3618,6 +3948,71 @@ function delRecipient(idx){
   draft.recipients.splice(idx, 1);
   renderAdmin();
 }
+
+// ── Managers (admin tab) ─────────────────────────────────────────────────
+function renderAdminManagers(){
+  const c = $('adminManagers'); if(!c) return;
+  c.innerHTML = '';
+  if(!draft.managers || !draft.managers.length){
+    c.innerHTML = `<div style="padding:14px;background:var(--bg);border:1px dashed var(--border);border-radius:10px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:8px">
+      No managers configured yet. Add at least one below if you want to require approval.
+    </div>`;
+    return;
+  }
+  draft.managers.forEach((m, idx) => {
+    const row = document.createElement('div');
+    row.className = 'user-row-item';
+    row.innerHTML = `
+      <div style="flex:1;display:grid;grid-template-columns:1fr 100px auto;gap:6px;align-items:center">
+        <input type="text" id="mgr_name_${idx}" value="${escH(m.name||'')}" autocapitalize="words" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:white;outline:none;">
+        <input type="text" id="mgr_pin_${idx}" value="${escH(m.pin||'')}" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;background:white;outline:none;text-align:center;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer">
+          <input type="checkbox" id="mgr_active_${idx}" ${m.active!==false?'checked':''} style="width:16px;height:16px;accent-color:var(--green)">
+          Active
+        </label>
+      </div>
+      <button class="del-btn" onclick="delManager(${idx})" title="Remove">✕</button>`;
+    c.appendChild(row);
+  });
+}
+function syncManagersFromInputs(){
+  if(!draft.managers) return;
+  draft.managers.forEach((m, idx) => {
+    const nameEl = $(`mgr_name_${idx}`);
+    const pinEl = $(`mgr_pin_${idx}`);
+    const actEl = $(`mgr_active_${idx}`);
+    if(nameEl) m.name = (nameEl.value||'').trim();
+    if(pinEl) m.pin = (pinEl.value||'').trim();
+    if(actEl) m.active = actEl.checked;
+  });
+  // Capture the requirement toggle
+  const reqEl = $('requireManagerApproval');
+  if(reqEl) draft.requireManagerApproval = reqEl.checked;
+}
+function addManager(){
+  syncManagersFromInputs();
+  syncDraftInputs();
+  const nameInp = $('newManagerName');
+  const pinInp = $('newManagerPin');
+  const name = (nameInp?.value||'').trim();
+  const pin = (pinInp?.value||'').trim();
+  if(!name){ alert('Manager name is required.'); return; }
+  if(!pin || !/^[0-9]{4,6}$/.test(pin)){ alert('PIN must be 4 to 6 digits.'); return; }
+  if(draft.managers.some(m => m.pin === pin)){
+    alert('That PIN is already used by another manager. Choose a different PIN.');
+    return;
+  }
+  draft.managers.push({ name, pin, active: true });
+  if(nameInp) nameInp.value = '';
+  if(pinInp) pinInp.value = '';
+  renderAdmin();
+}
+function delManager(idx){
+  syncManagersFromInputs();
+  if(!confirm(`Remove manager "${draft.managers[idx]?.name||'Unnamed'}"?`)) return;
+  draft.managers.splice(idx, 1);
+  renderAdmin();
+}
 function addSupply(){
   const inp=$('newSupplyName'); const v=(inp?.value||'').trim(); if(!v) return;
   syncDraftInputs(); draft.supplies.push(v); inp.value=''; renderAdmin();
@@ -3766,6 +4161,18 @@ async function applyAdmin(){
       .map(e => (e||'').trim().toLowerCase())
       .filter(e => e && !seen.has(e) && seen.add(e));
   }
+  // Managers
+  if(draft.managers){
+    const seenPins = new Set();
+    MANAGERS = draft.managers
+      .map(m => ({
+        name: (m.name||'').trim(),
+        pin: (m.pin||'').trim(),
+        active: m.active !== false
+      }))
+      .filter(m => m.name && m.pin && !seenPins.has(m.pin) && seenPins.add(m.pin));
+  }
+  REQUIRE_MANAGER_APPROVAL = !!draft.requireManagerApproval;
   renderInv('openingGroups','open');
   renderInv('closingGroups','close');
   renderSuppliesChecklist();
@@ -4597,6 +5004,8 @@ function saveState() {
     cashFloat:      parseFloat(($('cashFloat')||{}).value)||0,
     posOrders:      posOrders,
     // posInventory is recomputed on restore — not saved
+    // Manager approval audit log
+    approvalEvents: approvalEvents,
     // DOM inputs (inventory counts, weights, etc.)
     inputs,
   };
@@ -4647,6 +5056,9 @@ async function restoreState(state) {
   openingCounts  = state.openingCounts  || {};
   closingCounts  = state.closingCounts  || {};
   restockCounts  = state.restockCounts  || {};
+
+  // Restore manager-approval audit log
+  approvalEvents = Array.isArray(state.approvalEvents) ? state.approvalEvents : [];
 
   // Re-render inventory (this creates the DOM elements we need to populate)
   renderInv('openingGroups', 'open');
