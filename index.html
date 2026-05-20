@@ -337,6 +337,9 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
 .liq-field-label{font-size:10px;color:var(--amber);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
 .admin-save-bar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);padding:12px 20px;max-width:600px;margin:0 auto;z-index:10;}
 
+/* Unlock closing modal — same styling as the admin password modal */
+#unlockClosingModal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
+#unlockClosingModal.open{display:flex;}
 /* Admin password modal */
 #pwModal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
 #pwModal.open{display:flex;}
@@ -631,6 +634,20 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   </div>
 </div>
 
+<!-- ══ UNLOCK CLOSING MODAL ════════════════════════════════ -->
+<div id="unlockClosingModal">
+  <div class="pw-box">
+    <h3>Unlock closing count</h3>
+    <p>Enter the unlock PIN to re-open the closing count for edits. Values currently submitted will be retained so you only need to correct what changed.</p>
+    <input type="password" id="unlockClosingPin" placeholder="PIN"
+      inputmode="numeric" pattern="[0-9]*" maxlength="4"
+      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+      onkeydown="if(event.key==='Enter')confirmUnlockClosing()">
+    <div class="pw-error" id="unlockClosingError">Incorrect PIN. Try again.</div>
+    <button class="btn-primary" style="margin-top:0" onclick="confirmUnlockClosing()">Unlock</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeUnlockClosingModal()">Cancel</button>
+  </div>
+</div>
 <!-- ══ PASSWORD MODAL ══════════════════════════════════════ -->
 <div id="pwModal">
   <div class="pw-box">
@@ -928,7 +945,8 @@ canvas.sig-canvas{width:100%;height:110px;border:1px dashed var(--border);border
   <p class="section-sub">Count remaining stock. For each liquor bottle, either weigh it and enter the end weight, or tick "Bottle empty" to auto-calculate from the start weight.</p>
   <div id="closingLockedBanner" style="display:none" class="locked-banner">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    Closing count has been submitted and locked. To change values, start a new shift via the hamburger menu.
+    <span style="flex:1">Closing count has been submitted and locked.</span>
+    <button onclick="openUnlockClosingModal()" style="background:white;border:1px solid var(--green);color:var(--green);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;">Unlock (PIN)</button>
   </div>
   <div id="closingGroups"></div>
   <div class="nav-row">
@@ -2260,6 +2278,68 @@ function lockLastRestock(cb) {
   }
   if(cb) cb();
   return true;
+}
+
+// Closing-count unlock PIN — allows staff to re-open a submitted closing
+// count for corrections without starting a new shift.
+const UNLOCK_PIN = '1234';
+
+function openUnlockClosingModal(){
+  $('unlockClosingPin').value = '';
+  $('unlockClosingError').style.display = 'none';
+  $('unlockClosingModal').classList.add('open');
+  setTimeout(() => $('unlockClosingPin').focus(), 100);
+}
+function closeUnlockClosingModal(){
+  $('unlockClosingModal').classList.remove('open');
+}
+function confirmUnlockClosing(){
+  if(($('unlockClosingPin').value||'').trim() !== UNLOCK_PIN){
+    $('unlockClosingError').style.display = 'block';
+    $('unlockClosingPin').value = '';
+    $('unlockClosingPin').focus();
+    return;
+  }
+  // Capture closing values from the DOM BEFORE we mutate snapshot/state, so
+  // re-rendering the closing tab preserves them visually for editing.
+  const preservedCloseValues = {};
+  Object.entries(closingCounts).forEach(([key, qty]) => {
+    const [gi, ii] = key.split('_');
+    const el = $(`close_g${gi}_i${ii}`);
+    if(el && el.value) preservedCloseValues[el.id] = el.value;
+  });
+  // Clear the snapshot + lock state
+  closingCounts = {};
+  closingSubmitted = false;
+  // Clear stale cashout summary and email status so the user gets a fresh
+  // cashout once they re-submit
+  const sc = $('summaryContent'); if(sc) sc.innerHTML = '';
+  const emailStatus = $('emailStatus'); if(emailStatus) emailStatus.innerHTML = '';
+  window._sd = null;
+  // Reset send button state in case it had been "Sent" or "Retry"
+  const sendBtn = $('sendBtn');
+  if(sendBtn){
+    sendBtn.disabled = false;
+    sendBtn.style.background = '';
+    sendBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send report`;
+  }
+  // Hide locked banner and re-show closing nav buttons
+  const banner = $('closingLockedBanner');
+  if(banner) banner.style.display = 'none';
+  const step4 = $('step4');
+  if(step4){
+    const navRow = step4.querySelector('.nav-row');
+    if(navRow) navRow.querySelectorAll('button').forEach(b => { b.style.display = ''; });
+  }
+  // Re-render closing tab — renderInv's generic preserve mechanism will
+  // restore the captured values into the new inputs
+  renderInv('closingGroups', 'close');
+  // Re-render POS so the "+ New order" button comes back
+  renderPosHome();
+  // Close modal, navigate to Closing tab, persist state
+  closeUnlockClosingModal();
+  goStep(4);
+  autosave();
 }
 
 function proceedToClosing() {
