@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T14:42:19.281Z",
+  "updatedAt": "2026-05-20T14:48:20.476Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -309,5 +309,28 @@
     "paul@copperhouse.ca",
     "manager@copperhouse.ca",
     "jassinokwal88@gmail.com"
-  ]
+  ],
+  "MANAGERS": [
+    {
+      "name": "Rubal Kaur",
+      "pin": "6203",
+      "active": true
+    },
+    {
+      "name": "Monika Monika",
+      "pin": "6822",
+      "active": true
+    },
+    {
+      "name": "Christian Segovia",
+      "pin": "1697",
+      "active": true
+    },
+    {
+      "name": "Paul Henry",
+      "pin": "1901",
+      "active": true
+    }
+  ],
+  "REQUIRE_MANAGER_APPROVAL": true
 }
