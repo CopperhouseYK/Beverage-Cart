@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T14:48:21.968Z",
+  "updatedAt": "2026-05-20T17:41:10.139Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -294,14 +294,6 @@
       "phone": "(867) 445-2712",
       "password": "KH2712",
       "active": true
-    },
-    {
-      "id": "u1779211152410",
-      "fullName": "Ava Nystrom",
-      "email": "ava.nystrom@icloud.com",
-      "phone": "(867) 446-9473",
-      "password": "AN9473",
-      "active": true
     }
   ],
   "REFRESH_PASS": "Refresh123",
@@ -313,7 +305,7 @@
   "MANAGERS": [
     {
       "name": "Rubal Kaur",
-      "pin": "6203",
+      "pin": "0707",
       "active": true
     },
     {
@@ -328,7 +320,7 @@
     },
     {
       "name": "Paul Henry",
-      "pin": "1901",
+      "pin": "0731",
       "active": true
     }
   ],
