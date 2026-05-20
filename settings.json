@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T18:46:09.328Z",
+  "updatedAt": "2026-05-20T19:22:02.216Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -301,6 +301,14 @@
       "email": "jassinokwal88@gmail.com",
       "phone": "(778) 723-6203",
       "password": "RK6203",
+      "active": true
+    },
+    {
+      "id": "u1779304922216",
+      "fullName": "Ishmeet Kaur",
+      "email": "ishmeetk678@gmail.com",
+      "phone": "(437) 450-1602",
+      "password": "IK1602",
       "active": true
     }
   ],
