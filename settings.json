@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-20T23:16:14.881Z",
+  "updatedAt": "2026-05-21T19:49:10.605Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -326,6 +326,14 @@
       "email": "monikajhim6@gmail.com",
       "phone": "(514) 605-6822",
       "password": "MM6822",
+      "active": true
+    },
+    {
+      "id": "u1779392950604",
+      "fullName": "Tanay Kalita",
+      "email": "tanaykalita23@gmail.com",
+      "phone": "(226) 961-8710",
+      "password": "TK8710",
       "active": true
     }
   ],
