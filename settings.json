@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-21T19:49:12.685Z",
+  "updatedAt": "2026-05-21T20:04:27.152Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -140,6 +140,21 @@
         },
         {
           "name": "Diet Pepsi (mini can)",
+          "price": 2.38,
+          "on": true
+        },
+        {
+          "name": "Tonic (mini can)",
+          "price": 2.38,
+          "on": true
+        },
+        {
+          "name": "Club Soda (mini can)",
+          "price": 2.38,
+          "on": true
+        },
+        {
+          "name": "Ginger Ale (mini can)",
           "price": 2.38,
           "on": true
         }
