@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-22T20:25:41.855Z",
+  "updatedAt": "2026-05-22T20:26:57.901Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -156,6 +156,16 @@
         {
           "name": "Ginger Ale (mini can)",
           "price": 2.38,
+          "on": true
+        },
+        {
+          "name": "Orange Juice (can)",
+          "price": 2.86,
+          "on": true
+        },
+        {
+          "name": "Apple Juice (can)",
+          "price": 2.86,
           "on": true
         }
       ]
