@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-25T16:50:42.770Z",
+  "updatedAt": "2026-05-25T16:51:14.909Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -375,6 +375,14 @@
       "email": "e.krykowsky@gmail.com",
       "phone": "(780) 289-9211",
       "password": "EK9211",
+      "active": true
+    },
+    {
+      "id": "u1779727874908",
+      "fullName": "Kassandra Rolles",
+      "email": "kassandrarolles@outlook.com",
+      "phone": "(867) 445-3223",
+      "password": "KR3223",
       "active": true
     }
   ],
