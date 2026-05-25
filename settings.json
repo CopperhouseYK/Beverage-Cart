@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-22T20:28:56.251Z",
+  "updatedAt": "2026-05-25T16:50:15.319Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -359,6 +359,14 @@
       "email": "tanaykalita23@gmail.com",
       "phone": "(226) 961-8710",
       "password": "TK8710",
+      "active": true
+    },
+    {
+      "id": "u1779727815319",
+      "fullName": "Maia Hoechsmann",
+      "email": "maia.hoech@gmail.com",
+      "phone": "(672) 230-5991",
+      "password": "MH5991",
       "active": true
     }
   ],
