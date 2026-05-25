@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-25T16:50:15.319Z",
+  "updatedAt": "2026-05-25T16:50:42.770Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -367,6 +367,14 @@
       "email": "maia.hoech@gmail.com",
       "phone": "(672) 230-5991",
       "password": "MH5991",
+      "active": true
+    },
+    {
+      "id": "u1779727842769",
+      "fullName": "Emma Krykowsky",
+      "email": "e.krykowsky@gmail.com",
+      "phone": "(780) 289-9211",
+      "password": "EK9211",
       "active": true
     }
   ],
