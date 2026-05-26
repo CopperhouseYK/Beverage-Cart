@@ -1902,7 +1902,25 @@ function applyLiqValidation(inputEl, warnId, val, liq, phase, openW, onStore) {
     warnEl.textContent = msg;
     warnEl.style.display = msg ? 'block' : 'none';
   }
-  // Always store the value as typed — user must correct it themselves
+  if(!valid){
+    // Build a clear prompt showing the allowed range
+    const emptyW = liqEmptyWeight(liq);
+    const upper       = phase === 'close' ? (openW || liq.fullWeight) : liq.fullWeight;
+    const upperLabel  = phase === 'close' ? 'start weight'             : 'full bottle weight';
+    alert(
+      `Invalid weight for ${liq.name}\n\n` +
+      `Entered: ${val}g\n` +
+      `Allowed range: ${emptyW}g (empty bottle) to ${upper}g (${upperLabel})\n\n` +
+      `Please re-weigh the bottle on the scale and enter a value within this range.`
+    );
+    // Reject the value: clear the field and treat as not entered
+    inputEl.value = '';
+    inputEl.style.borderColor = 'var(--red)';
+    onStore(0);
+    setTimeout(() => { inputEl.style.borderColor = ''; inputEl.focus(); }, 50);
+    return;
+  }
+  // Valid — store as typed
   onStore(val);
 }
 
@@ -3193,6 +3211,32 @@ async function sendReport(){
   const luckyTips = posOrders.reduce((s,o)=>s+(o.luckyTip||0),0);
   const totalTips = Math.max(cardTips+cashTips+luckyTips, mTips);
 
+  // POS payment summary — per-method sales (applied to the bill, excludes tips)
+  const cashSalesPOS  = posOrders.reduce((s,o)=>s+(o.payments?.filter(p=>p.type==='cash' ).reduce((a,p)=>a+p.amount,0)||0),0);
+  const cardSalesPOS  = posOrders.reduce((s,o)=>s+(o.payments?.filter(p=>p.type==='card' ).reduce((a,p)=>a+p.amount,0)||0),0);
+  const luckySalesPOS = posOrders.reduce((s,o)=>s+(o.payments?.filter(p=>p.type==='lucky').reduce((a,p)=>a+p.amount,0)||0),0);
+  const fmtUSD = n => '$' + (Math.round(n*100)/100).toFixed(2);
+  // Two label widths so tip lines visually indent inward from the sales values
+  const padLR = (lbl, val, W) => {
+    const gap = Math.max(1, W - lbl.length - val.length);
+    return lbl + ' '.repeat(gap) + val;
+  };
+  const SALES_W = 40, TIPS_W = 46, TOTAL_W = 40;
+  let posPaySection = '';
+  posPaySection += padLR('Cash sales:', fmtUSD(cashSalesPOS), SALES_W) + '\n';
+  posPaySection += padLR('Cash tips:',  fmtUSD(cashTips),     TIPS_W)  + '\n';
+  posPaySection += padLR('   Total Cash:', fmtUSD(cashSalesPOS + cashTips), TOTAL_W) + '\n';
+  posPaySection += '\n';
+  posPaySection += padLR('Card sales:', fmtUSD(cardSalesPOS), SALES_W) + '\n';
+  posPaySection += padLR('Card tips:',  fmtUSD(cardTips),     TIPS_W)  + '\n';
+  posPaySection += padLR('   Total Card:', fmtUSD(cardSalesPOS + cardTips), TOTAL_W);
+  if(luckySalesPOS > 0 || luckyTips > 0){
+    posPaySection += '\n\n';
+    posPaySection += padLR('Lucky Bucks applied:', fmtUSD(luckySalesPOS), SALES_W) + '\n';
+    posPaySection += padLR('Lucky Bucks tips:',    fmtUSD(luckyTips),     TIPS_W)  + '\n';
+    posPaySection += padLR('   Total Lucky:',      fmtUSD(luckySalesPOS + luckyTips), TOTAL_W);
+  }
+
   // ───────── Packaged-goods reconciliation table ─────────
   const reconHeader = `  ${'Item'.padEnd(30)}${'Open'.padStart(6)}${'Re'.padStart(6)}${'Avail'.padStart(6)}${'End'.padStart(6)}${'Theo'.padStart(6)}${'POS'.padStart(6)}${'Var'.padStart(6)}`;
   const reconRows = [];
@@ -3215,41 +3259,79 @@ async function sendReport(){
     });
   });
 
-  // ───────── Liquor reconciliation table ─────────
-  const liqHeader = `  ${'Spirit'.padEnd(30)}${'Avail'.padStart(8)}${'End'.padStart(8)}${'Theo'.padStart(8)}${'POS'.padStart(6)}${'Var'.padStart(8)}`;
+  // ───────── Liquor reconciliation table (per-bottle + per-spirit total) ─────────
+  const NAME_W = 36;
+  const liqHeader = `  ${'Spirit / bottle'.padEnd(NAME_W)}${'Avail'.padStart(8)}${'End'.padStart(8)}${'Theo'.padStart(8)}${'POS'.padStart(6)}${'Var'.padStart(8)}`;
   const liqReconRows = [];
   const posShotsSold = {};
   posOrders.forEach(o=>o.items.forEach(i=>{
     if(i.isLiq){ const k=posItemKey(i.name+'_shot'); posShotsSold[k]=(posShotsSold[k]||0)+i.qty; }
   }));
-  const liqSoldData = getAllLiqSold();
+  // Helper: compute one bottle's grams for Avail / End / Theo.
+  // Mirrors calcBottleSold so totals here match elsewhere in the app.
+  const bottleMetricsG = (b, emptyW) => {
+    const availG = Math.max(0, (b.openW||0) - emptyW);
+    let endG, theoG;
+    if(b.isEmpty){
+      endG  = 0;
+      theoG = availG;
+    } else if(b.closeW){
+      endG  = Math.max(0, b.closeW - emptyW);
+      theoG = Math.max(0, (b.openW||0) - b.closeW);
+    } else {
+      // Not measured — treat as no consumption (matches calcBottleSold)
+      endG  = availG;
+      theoG = 0;
+    }
+    return { availG, endG, theoG };
+  };
   activeLiq().forEach(l=>{
-    const globalLi=LIQUOR.indexOf(l);
-    const openBottles=selectedLiquor.filter(e=>e.liqIndex===globalLi);
-    const openOz=openBottles.reduce((s,b)=>s+Math.max(0,(b.openW-liqEmptyWeight(l))/30),0);
-    let restockOz=0;
-    Object.values(restockLiquor).forEach(bottles=>{
-      bottles.forEach(b=>{ if(b.liqIndex===globalLi) restockOz+=Math.max(0,(b.openW-liqEmptyWeight(l))/30); });
+    const globalLi = LIQUOR.indexOf(l);
+    const emptyW   = liqEmptyWeight(l);
+    // Gather every bottle for this spirit, tagged by source
+    const bottles = [];
+    selectedLiquor.forEach(e => { if(e.liqIndex === globalLi) bottles.push({...e, source: 'opening'}); });
+    Object.entries(restockLiquor).forEach(([n, bots]) => {
+      bots.forEach(e => { if(e.liqIndex === globalLi) bottles.push({...e, source: `restock ${n}`}); });
     });
-    const subtotalOz=openOz+restockOz;
-    const shotKey=posItemKey(l.name+'_shot');
-    const actualSoldShots=posShotsSold[shotKey]||0;
-    if(subtotalOz<0.01 && !actualSoldShots) return;
-    const consumed=liqSoldData.find(s=>s.name===l.name);
-    const theoOz=consumed?consumed.totalOz:0;
-    const endingOz=Math.max(0,subtotalOz-theoOz);
-    const variance=actualSoldShots-theoOz;
-    const varStr = ((variance>=0?'+':'')+variance.toFixed(0)+'oz').padStart(8);
-    liqReconRows.push(`  ${l.name.padEnd(30)}${(subtotalOz.toFixed(1)+'oz').padStart(8)}${(endingOz.toFixed(1)+'oz').padStart(8)}${(theoOz+'oz').padStart(8)}${(actualSoldShots+'oz').padStart(6)}${varStr}`);
-    // Gram-equivalent line beneath each spirit (same 1oz = 30g conversion used elsewhere)
-    const subtotalG = Math.round(subtotalOz * 30);
-    const endingG   = Math.round(endingOz   * 30);
-    const theoG     = Math.round(theoOz     * 30);
+    const shotKey         = posItemKey(l.name + '_shot');
+    const actualSoldShots = posShotsSold[shotKey] || 0;
+    if(!bottles.length && !actualSoldShots) return;
+    // Per-bottle rows (no POS / Var columns — those only make sense at the spirit level)
+    let totAvailG = 0, totEndG = 0, totTheoG = 0;
+    // Count bottles per source so multi-bottle sources get "#1, #2" suffixes
+    const sourceCounts = {};
+    bottles.forEach(b => { sourceCounts[b.source] = (sourceCounts[b.source]||0) + 1; });
+    const sourceSeen   = {};
+    bottles.forEach(b => {
+      sourceSeen[b.source] = (sourceSeen[b.source]||0) + 1;
+      const idxStr = sourceCounts[b.source] > 1 ? ` #${sourceSeen[b.source]}` : '';
+      const label  = `${l.name} (${b.source}${idxStr})`;
+      const { availG, endG, theoG } = bottleMetricsG(b, emptyW);
+      totAvailG += availG; totEndG += endG; totTheoG += theoG;
+      const availOz = (availG/30).toFixed(1) + 'oz';
+      const endOz   = (endG/30  ).toFixed(1) + 'oz';
+      const theoOz  = (theoG/30 ).toFixed(1) + 'oz';
+      liqReconRows.push(`  ${label.padEnd(NAME_W)}${availOz.padStart(8)}${endOz.padStart(8)}${theoOz.padStart(8)}`);
+      liqReconRows.push(`  ${''.padEnd(NAME_W)}${(Math.round(availG)+'g').padStart(8)}${(Math.round(endG)+'g').padStart(8)}${(Math.round(theoG)+'g').padStart(8)}`);
+    });
+    // Per-spirit TOTAL row with POS + Var
+    const subtotalOz = totAvailG / 30;
+    const endingOz   = totEndG   / 30;
+    const theoOz     = totTheoG  / 30;
+    const variance   = actualSoldShots - theoOz;
+    const totLabel   = `   Total — ${l.name}`;
+    const varStr     = ((variance>=0?'+':'')+variance.toFixed(0)+'oz').padStart(8);
+    liqReconRows.push(`  ${totLabel.padEnd(NAME_W)}${(subtotalOz.toFixed(1)+'oz').padStart(8)}${(endingOz.toFixed(1)+'oz').padStart(8)}${(theoOz.toFixed(1)+'oz').padStart(8)}${(actualSoldShots+'oz').padStart(6)}${varStr}`);
     const posG      = Math.round(actualSoldShots * 30);
-    const varianceG = Math.round(variance   * 30);
+    const varianceG = Math.round(variance       * 30);
     const varGStr   = ((varianceG>=0?'+':'')+varianceG+'g').padStart(8);
-    liqReconRows.push(`  ${''.padEnd(30)}${(subtotalG+'g').padStart(8)}${(endingG+'g').padStart(8)}${(theoG+'g').padStart(8)}${(posG+'g').padStart(6)}${varGStr}`);
+    liqReconRows.push(`  ${''.padEnd(NAME_W)}${(Math.round(totAvailG)+'g').padStart(8)}${(Math.round(totEndG)+'g').padStart(8)}${(Math.round(totTheoG)+'g').padStart(8)}${(posG+'g').padStart(6)}${varGStr}`);
+    // Blank row between spirits for readability
+    liqReconRows.push('');
   });
+  // Drop trailing blank row if present
+  if(liqReconRows.length && liqReconRows[liqReconRows.length-1] === '') liqReconRows.pop();
 
   // Email subject
   const email_subject = `Daily Beverage Cart Report - ${sd.dateS}`;
@@ -3293,6 +3375,10 @@ CASH FLOAT
 ${'─'.repeat(74)}
 Float received from clubhouse:    $${(sd.cashFloat||0).toFixed(2)}
 (Returned to manager separately — not in safe envelope)
+
+POS PAYMENT SUMMARY
+${'─'.repeat(74)}
+${posPaySection}
 
 TIPS RECEIVED THIS SHIFT
 ${'─'.repeat(74)}
