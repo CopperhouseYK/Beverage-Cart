@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-25T16:51:26.318Z",
+  "updatedAt": "2026-05-27T23:36:51.132Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -383,6 +383,14 @@
       "email": "kassandrarolles@outlook.com",
       "phone": "(867) 445-3223",
       "password": "KR3223",
+      "active": true
+    },
+    {
+      "id": "u1779925011131",
+      "fullName": "John Renwick",
+      "email": "jbales1610@gmail.com",
+      "phone": "(289) 383-6025",
+      "password": "JR6025",
       "active": true
     }
   ],
