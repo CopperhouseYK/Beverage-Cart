@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-27T23:36:52.956Z",
+  "updatedAt": "2026-06-03T21:12:10.433Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -110,6 +110,11 @@
         },
         {
           "name": "Gatorade Zero Blue (bottle)",
+          "price": 4.29,
+          "on": true
+        },
+        {
+          "name": "Corona Sunbrew 0% (bottle)",
           "price": 4.29,
           "on": true
         },
