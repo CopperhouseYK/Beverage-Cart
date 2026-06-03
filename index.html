@@ -3162,6 +3162,16 @@ async function sendReport(){
     showStatus('error','Closing count has not been submitted yet.\n\nGo to the "4 · Closing" tab, count remaining stock, and tap "Calculate & cashout →" before sending the report.');
     return;
   }
+  // Date guard: shift date must match today's date (catches stale sessions)
+  const today = ymd(new Date());
+  const shiftDateInput = (($('shiftDate')||{}).value || '').trim();
+  if(shiftDateInput && shiftDateInput !== today){
+    showStatus('error',
+      `✗ Shift date (${shiftDateInput}) doesn't match today (${today}).\n\n` +
+      `This usually means the iPad picked up an old session.\n\n` +
+      `Either update the Shift date field on the Staff tab to today, OR open the hamburger menu and tap "New shift" to start fresh.`);
+    return;
+  }
   // Total card payments must be entered explicitly — empty is not the same as 0
   if(isMCardEmpty()){
     showStatus('error','✗ Card payments amount required. If there were no card payments this shift, enter 0 explicitly in the "Total card payments (including tips)" field.');
@@ -5328,6 +5338,151 @@ function autosave() {
   autosave._t = setTimeout(saveState, 400);
 }
 
+// ── Stale-session archiver ────────────────────────────────────────────────
+// When the app opens and finds a saved session whose shiftDate is older than
+// today, we email a snapshot of whatever was captured to paul@h2-solutions.ca
+// as an INCOMPLETE report — then clear localStorage so the cart starts on
+// a clean shift. If the email fails (network, EmailJS down) we keep the saved
+// state so the data isn't lost; the user can retry on next open.
+function ymd(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+async function archiveStaleSession(saved){
+  const archivedAtStr = new Date().toLocaleString('en-CA');
+  const savedAtStr    = saved.savedAt ? new Date(saved.savedAt).toLocaleString('en-CA') : '(unknown)';
+  const staleDate     = saved.shiftDate || '(unknown)';
+  const todayStr      = ymd(new Date());
+
+  const L = [];
+  L.push('INCOMPLETE BEVERAGE CART SHIFT — AUTO-ARCHIVED');
+  L.push('The Swinger\'s Club Golf Course');
+  L.push('='.repeat(74));
+  L.push('');
+  L.push('⚠ THIS IS NOT A COMPLETED REPORT');
+  L.push('');
+  L.push('An unfinished shift from a previous day was found on the iPad when it');
+  L.push('opened today. The session has been auto-archived to this address so the');
+  L.push('data is not lost, and the iPad has been cleared so a new shift can begin.');
+  L.push('');
+  L.push('─'.repeat(74));
+  L.push(`Stale shift date:   ${staleDate}`);
+  L.push(`Last autosaved:     ${savedAtStr}`);
+  L.push(`Archived at:        ${archivedAtStr}`);
+  L.push(`Today (cart iPad):  ${todayStr}`);
+  L.push('─'.repeat(74));
+  L.push('');
+
+  // POS orders summary
+  const orders = saved.posOrders || [];
+  if(orders.length){
+    const tot = orders.reduce((s,o)=>s+(o.total||0),0);
+    L.push(`POS ORDERS RECORDED (${orders.length} orders · $${tot.toFixed(2)} total)`);
+    L.push('─'.repeat(74));
+    orders.forEach((o,i)=>{
+      L.push(`Order #${i+1} · ${o.time||'?'} · ${o.method||'?'} · $${(o.total||0).toFixed(2)}${(o.tip||0)>0?` +$${o.tip.toFixed(2)} tip`:''}`);
+      (o.items||[]).forEach(it=>{
+        L.push(`    ${it.qty}× ${it.name}${it.isLiq?' (shot)':''} @ $${(it.price||0).toFixed(2)}`);
+      });
+    });
+    L.push('');
+  } else {
+    L.push('POS ORDERS: (none recorded)');
+    L.push('');
+  }
+
+  // Approval log so far
+  const apps = saved.approvalEvents || [];
+  if(apps.length){
+    L.push('APPROVAL LOG');
+    L.push('─'.repeat(74));
+    apps.forEach(ev => {
+      L.push(`  ${(ev.time||'').padEnd(10)}${(ev.stage||'').padEnd(14)}${(ev.action||'').toUpperCase().padEnd(10)}by ${ev.manager||'?'}`);
+    });
+    L.push('');
+  }
+
+  // Opening / closing / restock counts
+  const oc = saved.openingCounts || {};
+  const cc = saved.closingCounts || {};
+  const rc = saved.restockCounts || {};
+  if(Object.keys(oc).length || Object.keys(cc).length || Object.keys(rc).length){
+    L.push('INVENTORY COUNTS (raw, by group_item key)');
+    L.push('─'.repeat(74));
+    if(Object.keys(oc).length) L.push(`  Opening:  ${JSON.stringify(oc)}`);
+    Object.entries(rc).forEach(([n, counts]) => {
+      if(counts && Object.keys(counts).length) L.push(`  Restock ${n}: ${JSON.stringify(counts)}`);
+    });
+    if(Object.keys(cc).length) L.push(`  Closing:  ${JSON.stringify(cc)}`);
+    L.push('');
+  }
+
+  // Liquor bottles
+  const sl = saved.selectedLiquor || [];
+  if(sl.length){
+    L.push('LIQUOR — OPENING BOTTLES');
+    L.push('─'.repeat(74));
+    sl.forEach(b => {
+      const liq = (LIQUOR && LIQUOR[b.liqIndex]) || null;
+      L.push(`  ${liq?liq.name:'(unknown #'+b.liqIndex+')'} — open ${b.openW||'?'}g, close ${b.closeW||'?'}g${b.isEmpty?' [EMPTY]':''}`);
+    });
+    L.push('');
+  }
+  const rl = saved.restockLiquor || {};
+  if(Object.keys(rl).length){
+    L.push('LIQUOR — RESTOCK BOTTLES');
+    L.push('─'.repeat(74));
+    Object.entries(rl).forEach(([n, bottles]) => {
+      (bottles||[]).forEach(b => {
+        const liq = (LIQUOR && LIQUOR[b.liqIndex]) || null;
+        L.push(`  Round #${n}: ${liq?liq.name:'(unknown #'+b.liqIndex+')'} — open ${b.openW||'?'}g, close ${b.closeW||'?'}g${b.isEmpty?' [EMPTY]':''}`);
+      });
+    });
+    L.push('');
+  }
+
+  // Any other captured inputs (Moneris, shift notes, etc.)
+  if(saved.inputs){
+    const interesting = {};
+    Object.entries(saved.inputs).forEach(([k,v]) => {
+      if(v !== '' && v !== '0' && v !== 0 && v !== false && v != null) interesting[k] = v;
+    });
+    if(Object.keys(interesting).length){
+      L.push('OTHER CAPTURED INPUTS');
+      L.push('─'.repeat(74));
+      Object.entries(interesting).forEach(([k,v]) => L.push(`  ${k} = ${v}`));
+      L.push('');
+    }
+  }
+
+  L.push('─'.repeat(74));
+  L.push('End of auto-archived report.');
+  const body    = L.join('\n');
+  const subject = `⚠ INCOMPLETE Beverage Cart Session — ${staleDate}`;
+  const warningBlock = `<div style="margin:18px 0;padding:14px;border:2px solid #c0392b;border-radius:8px;background:#fdf0ee;font-family:Arial,sans-serif;color:#c0392b;line-height:1.5;">
+       <strong>⚠ Incomplete shift — auto-archived</strong><br>
+       No staff signature is attached because this report was archived automatically when a stale session from <strong>${staleDate}</strong> was detected on the iPad on ${todayStr}.<br>
+       The iPad has been reset so a clean shift can begin.
+     </div>`;
+
+  emailjs.init(EJS_KEY);
+  await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+    to_emails:        'paul@h2-solutions.ca',
+    email_subject:    subject,
+    staff_name:       '(auto-archive)',
+    shift_date:       staleDate,
+    start_time:       '',
+    end_time:         '',
+    cash_owing:       '',
+    total_sales:      '',
+    moneris_card:     '',
+    moneris_tips:     '',
+    report_body:      body,
+    signature_image:  warningBlock,
+    pos_csv:          '',
+    pos_csv_filename: '',
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   pinInit(); // show PIN screen before anything else
@@ -5336,7 +5491,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   // If the network is unreachable, fetchSettingsFromGitHub catches and returns
   // quickly so we don't block UI for long.
   await fetchSettingsFromGitHub();
-  const saved = hasSavedState();
+  let saved = hasSavedState();
+
+  // ── Stale-session guard ──
+  // If the saved session's shiftDate is older than today, auto-archive a
+  // snapshot to paul@h2-solutions.ca then clear the iPad so the new shift
+  // starts on a clean slate. If the archive email fails (e.g. no network),
+  // we keep the saved state so the data isn't lost — user can retry on
+  // next open or manually finish & send.
+  if (saved && saved.shiftDate && saved.shiftDate !== ymd(new Date())) {
+    try {
+      await archiveStaleSession(saved);
+      clearState();
+      saved = null;
+      console.log('✓ Stale session auto-archived to paul@h2-solutions.ca and cleared');
+      // Brief non-blocking confirmation
+      setTimeout(() => {
+        const b = document.createElement('div');
+        b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:90;background:var(--green);color:white;padding:10px 16px;font-size:13px;text-align:center;box-shadow:0 -2px 12px rgba(0,0,0,.15);';
+        b.innerHTML = '✓ Previous unfinished shift was auto-archived to paul@h2-solutions.ca. Starting fresh.';
+        document.body.appendChild(b);
+        setTimeout(() => { b.style.opacity='0'; b.style.transition='opacity .6s'; setTimeout(()=>b.remove(), 700); }, 5500);
+      }, 200);
+    } catch(e) {
+      console.warn('Could not archive stale session — keeping saved state for retry:', e);
+      // Fall through to normal restore so the user sees the data and can either retry or finish the old shift
+    }
+  }
 
   if (saved) {
     // Restore saved session
