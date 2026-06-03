@@ -3162,15 +3162,26 @@ async function sendReport(){
     showStatus('error','Closing count has not been submitted yet.\n\nGo to the "4 · Closing" tab, count remaining stock, and tap "Calculate & cashout →" before sending the report.');
     return;
   }
-  // Date guard: shift date must match today's date (catches stale sessions)
-  const today = ymd(new Date());
+  // Date guard: shift date must be today, OR yesterday (overnight tournament
+  // shift that's still wrapping up). Anything older is almost certainly a
+  // stale session that slipped past the on-open archiver.
+  const today          = ymd(new Date());
   const shiftDateInput = (($('shiftDate')||{}).value || '').trim();
-  if(shiftDateInput && shiftDateInput !== today){
-    showStatus('error',
-      `✗ Shift date (${shiftDateInput}) doesn't match today (${today}).\n\n` +
-      `This usually means the iPad picked up an old session.\n\n` +
-      `Either update the Shift date field on the Staff tab to today, OR open the hamburger menu and tap "New shift" to start fresh.`);
-    return;
+  if(shiftDateInput){
+    // Compute date difference in whole days
+    const [yT,mT,dT] = today.split('-').map(Number);
+    const [yS,mS,dS] = shiftDateInput.split('-').map(Number);
+    const todayMs = new Date(yT,mT-1,dT).getTime();
+    const shiftMs = new Date(yS,mS-1,dS).getTime();
+    const daysDiff = Math.round((todayMs - shiftMs) / (1000*60*60*24));
+    if(daysDiff < 0 || daysDiff > 1){
+      showStatus('error',
+        `✗ Shift date (${shiftDateInput}) doesn't match today (${today}).\n\n` +
+        `Reports must be sent on the day the shift started or the next morning ` +
+        `(for overnight shifts like the Midnight Sun Classic).\n\n` +
+        `Either update the Shift date field on the Staff tab, OR open the hamburger menu and tap "New shift" to start fresh.`);
+      return;
+    }
   }
   // Total card payments must be entered explicitly — empty is not the same as 0
   if(isMCardEmpty()){
@@ -5339,13 +5350,36 @@ function autosave() {
 }
 
 // ── Stale-session archiver ────────────────────────────────────────────────
-// When the app opens and finds a saved session whose shiftDate is older than
-// today, we email a snapshot of whatever was captured to paul@h2-solutions.ca
-// as an INCOMPLETE report — then clear localStorage so the cart starts on
-// a clean shift. If the email fails (network, EmailJS down) we keep the saved
-// state so the data isn't lost; the user can retry on next open.
+// When the app opens and finds a session that's been ABANDONED (not just
+// crossing midnight on a long tournament shift), we email a snapshot of
+// whatever was captured to paul@h2-solutions.ca as an INCOMPLETE report —
+// then clear localStorage so the cart starts on a clean shift. If the email
+// fails (network, EmailJS down) we keep the saved state so the data isn't
+// lost; the user can retry on next open.
+//
+// The key distinction is TIME SINCE LAST ACTIVITY, not the calendar date.
+// A tournament that runs 10pm → 4am has shiftDate = day 1 but savedAt = a
+// few minutes ago, so we leave it alone. The May-31-stamped-on-June-2 bug
+// had savedAt from 2+ days earlier, so it (correctly) gets archived.
+const STALE_HOURS = 12;
 function ymd(d){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function hoursSinceSavedAt(saved){
+  if(!saved || !saved.savedAt) return Infinity;
+  const last = new Date(saved.savedAt).getTime();
+  if(isNaN(last)) return Infinity;
+  return (Date.now() - last) / (1000 * 60 * 60);
+}
+function isSessionStale(saved){
+  if(!saved || !saved.shiftDate) return false;
+  // Same-day session: always active, never archive
+  if(saved.shiftDate === ymd(new Date())) return false;
+  // Different calendar day: only stale if it's also been idle for a long time.
+  // This lets overnight tournament shifts (10pm → 4am) keep working —
+  // savedAt stays current as staff use the app — while still catching truly
+  // abandoned sessions (forgotten yesterday, found this morning).
+  return hoursSinceSavedAt(saved) >= STALE_HOURS;
 }
 async function archiveStaleSession(saved){
   const archivedAtStr = new Date().toLocaleString('en-CA');
@@ -5494,12 +5528,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   let saved = hasSavedState();
 
   // ── Stale-session guard ──
-  // If the saved session's shiftDate is older than today, auto-archive a
-  // snapshot to paul@h2-solutions.ca then clear the iPad so the new shift
-  // starts on a clean slate. If the archive email fails (e.g. no network),
-  // we keep the saved state so the data isn't lost — user can retry on
-  // next open or manually finish & send.
-  if (saved && saved.shiftDate && saved.shiftDate !== ymd(new Date())) {
+  // Auto-archive ONLY truly abandoned sessions (saved.shiftDate isn't today
+  // AND the iPad has been idle for STALE_HOURS+). This deliberately leaves
+  // midnight-crossing tournament shifts alone — they continuously autosave
+  // as staff use the POS, so hoursSinceSavedAt stays small.
+  // If the archive email fails, we keep the saved state intact so data
+  // isn't lost; the user can retry on next open or finish & send manually.
+  if (isSessionStale(saved)) {
     try {
       await archiveStaleSession(saved);
       clearState();
