@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-05T16:32:52.143Z",
+  "updatedAt": "2026-06-05T16:33:42.394Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -285,7 +285,7 @@
     },
     {
       "name": "Sourpuss",
-      "price": 6,
+      "price": 5.71,
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1290
