@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-05T16:33:42.394Z",
+  "updatedAt": "2026-06-05T16:35:32.458Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -403,6 +403,14 @@
       "email": "jbales1610@gmail.com",
       "phone": "(289) 383-6025",
       "password": "JR6025",
+      "active": true
+    },
+    {
+      "id": "u1780677332457",
+      "fullName": "Lacey Furniss",
+      "email": "funisslacey@gmail.com",
+      "phone": "(867) 446-7112",
+      "password": "LF7112",
       "active": true
     }
   ],
