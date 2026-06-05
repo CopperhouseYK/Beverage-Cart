@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-05T15:32:52.449Z",
+  "updatedAt": "2026-06-05T16:32:52.143Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -284,11 +284,11 @@
       "fullWeight": 1220
     },
     {
-      "name": "Sourpuss Raspberry",
+      "name": "Sourpuss",
       "price": 6,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1300
+      "fullWeight": 1290
     }
   ],
   "SUPPLIES": [
