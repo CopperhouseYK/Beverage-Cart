@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-11T19:15:21.644Z",
+  "updatedAt": "2026-06-11T19:15:44.661Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -227,6 +227,11 @@
         {
           "name": "Caesar Salad",
           "price": 11.43,
+          "on": true
+        },
+        {
+          "name": "Riverside Salad",
+          "price": 13.33,
           "on": true
         }
       ]
