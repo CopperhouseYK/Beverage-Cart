@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-05T16:35:48.485Z",
+  "updatedAt": "2026-06-11T19:15:21.644Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -222,6 +222,11 @@
         {
           "name": "Assorted Sandwiches",
           "price": 12.38,
+          "on": true
+        },
+        {
+          "name": "Caesar Salad",
+          "price": 11.43,
           "on": true
         }
       ]
