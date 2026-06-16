@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-16T16:06:24.976Z",
+  "updatedAt": "2026-06-16T16:09:08.472Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -429,6 +429,14 @@
       "email": "megen.lafferty@hotmail.com",
       "phone": "(867) 446-3288",
       "password": "ML3288",
+      "active": true
+    },
+    {
+      "id": "u1781626148472",
+      "fullName": "Michael Sadler",
+      "email": "michael.a.sadler04@gmail.com",
+      "phone": "(867) 447-1921",
+      "password": "MS1921",
       "active": true
     }
   ],
