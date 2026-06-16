@@ -3096,9 +3096,11 @@ function getSignatureDataUrl(){
 // ── Send email ────────────────────────────────────────────────────────────
 // ── POS Transactions CSV builder ─────────────────────────────────────────
 function buildPosCSV(){
-  const dateRaw = ($('shiftDate')||{}).value;
-  const d = dateRaw ? new Date(dateRaw + 'T12:00:00') : new Date();
-  const dateFmt = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+  // Fallback date when an order has no processedAt timestamp (older orders
+  // saved before the per-transaction timestamp was introduced).
+  const dateRaw      = ($('shiftDate')||{}).value;
+  const fallbackD    = dateRaw ? new Date(dateRaw + 'T12:00:00') : new Date();
+  const fallbackDate = `${fallbackD.getMonth()+1}/${fallbackD.getDate()}/${fallbackD.getFullYear()}`;
   const csvField = v => {
     const s = String(v);
     return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
@@ -3107,11 +3109,29 @@ function buildPosCSV(){
     const abs = Math.abs(n).toFixed(2);
     return neg ? `(${abs})` : abs;
   };
+  // Derive Date + Time columns for one order. Prefers the real ISO
+  // timestamp captured at confirmPayment (so post-midnight orders get the
+  // correct calendar date), falls back to the shift-date header + the
+  // legacy human-readable order.time for orders saved before this change.
+  // Normalize a clock string to the legacy CSV format "hh:mmam"/"hh:mmpm"
+  // (no spaces, no periods, lower case) so old and new orders look identical.
+  const normTime = (s) => (s||'').replace(/\./g,'').replace(/\s+/g,'').toLowerCase();
+  const orderDateTime = (order) => {
+    if(order.processedAt){
+      const d = new Date(order.processedAt);
+      if(!isNaN(d.getTime())){
+        const dateFmt = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+        const timeFmt = normTime(d.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',hour12:true}));
+        return { dateFmt, timeFmt };
+      }
+    }
+    return { dateFmt: fallbackDate, timeFmt: normTime(order.time) };
+  };
   const rows = [];
   rows.push('Order #,Date,Time,Type,Item,Qty,Price,Amount');
   posOrders.forEach((order, idx) => {
     const orderNum = idx + 1;
-    const timeFmt = (order.time||'').replace(' ','').toLowerCase();
+    const { dateFmt, timeFmt } = orderDateTime(order);
     order.items.forEach(item => {
       const name = item.name + (item.isLiq ? ' (shot)' : '');
       const lineTotal = (item.price||0) * (item.qty||0);
@@ -5013,6 +5033,13 @@ async function confirmPayment(){
       payments:paymentRows.map(r=>({...r})),
       method,
       time: editIdSnapshot!==null ? posOrders[editIdSnapshot].time : nowStr(),
+      // Full ISO timestamp captured at confirmation time. Used by the CSV
+      // exporter so post-midnight orders (e.g. Midnight Sun Classic) get
+      // the correct calendar date, not the shift-date header. Preserved
+      // across edits so re-confirming doesn't shift the original timestamp.
+      processedAt: editIdSnapshot!==null
+        ? (posOrders[editIdSnapshot].processedAt || new Date().toISOString())
+        : new Date().toISOString(),
       editedAt: editIdSnapshot!==null ? nowStr() : null,
     };
     if(editIdSnapshot!==null){
