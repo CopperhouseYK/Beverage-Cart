@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-11T19:15:44.661Z",
+  "updatedAt": "2026-06-16T16:06:24.976Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -421,6 +421,14 @@
       "email": "furnisslacey@gmail.com",
       "phone": "(867) 446-7112",
       "password": "LF7112",
+      "active": true
+    },
+    {
+      "id": "u1781625984975",
+      "fullName": "Megen Lafferty",
+      "email": "megen.lafferty@hotmail.com",
+      "phone": "(867) 446-3288",
+      "password": "ML3288",
       "active": true
     }
   ],
