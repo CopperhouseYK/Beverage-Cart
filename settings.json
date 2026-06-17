@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-16T16:09:22.109Z",
+  "updatedAt": "2026-06-17T15:41:36.537Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -437,6 +437,14 @@
       "email": "michael.a.sadler04@gmail.com",
       "phone": "(867) 447-1921",
       "password": "MS1921",
+      "active": true
+    },
+    {
+      "id": "u1781710896536",
+      "fullName": "Caitlin Kenny",
+      "email": "cait.kenny89@gmail.com",
+      "phone": "(902) 292-3354",
+      "password": "CK3354",
       "active": true
     }
   ],
