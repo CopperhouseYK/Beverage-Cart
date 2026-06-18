@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-17T15:41:40.048Z",
+  "updatedAt": "2026-06-18T23:36:23.790Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -299,6 +299,13 @@
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1290
+    },
+    {
+      "name": "Crown Royal Whisky",
+      "price": 7,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1275
     }
   ],
   "SUPPLIES": [
