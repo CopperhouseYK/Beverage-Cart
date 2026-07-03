@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-24T05:55:24.069Z",
+  "updatedAt": "2026-07-03T20:43:54.640Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -306,6 +306,13 @@
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1275
+    },
+    {
+      "name": "Bailey's Irish Cream",
+      "price": 6.67,
+      "on": true,
+      "bottleSizeMl": 750,
+      "fullWeight": 1210
     }
   ],
   "SUPPLIES": [
