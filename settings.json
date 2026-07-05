@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T18:05:14.957Z",
+  "updatedAt": "2026-07-05T18:16:17.148Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -170,6 +170,11 @@
         },
         {
           "name": "Apple Juice (can)",
+          "price": 2.86,
+          "on": true
+        },
+        {
+          "name": "Coffee",
           "price": 2.86,
           "on": true
         }
