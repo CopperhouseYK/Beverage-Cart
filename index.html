@@ -1749,7 +1749,7 @@ function renderInv(cid, phase) {
       <div style="display:flex;gap:8px;align-items:center">
         <select id="liqPicker" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;color:var(--ink);outline:none;">
           <option value="">— Select a spirit —</option>
-          ${activeLiq().map((l,li)=>`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`).join('')}
+          ${LIQUOR.map((l,li)=>l.on?`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`:'').join('')}
         </select>
         <button class="add-item-btn" onclick="addSelectedLiquor()" style="flex-shrink:0;padding:9px 14px">+ Add</button>
       </div>
@@ -2087,7 +2087,7 @@ function renderRestock(n) {
       <div style="padding:6px 14px 12px;display:flex;gap:8px;align-items:center" id="restockLiqPicker_wrap_${n}">
         <select id="restockLiqPicker_${n}" style="flex:1;padding:8px 10px;border:1px solid var(--amber-b);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--amber-pale);color:var(--ink);outline:none;">
           <option value="">— Add a spirit —</option>
-          ${activeLiq().map((l,li)=>`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`).join('')}
+          ${LIQUOR.map((l,li)=>l.on?`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`:'').join('')}
         </select>
         <button class="add-item-btn" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber-b);flex-shrink:0" onclick="addRestockLiq(${n})">+ Add</button>
       </div>
@@ -2562,7 +2562,7 @@ function unlockRestockRound(n){
         pickerWrap.innerHTML = `
           <select id="restockLiqPicker_${n}" style="flex:1;padding:8px 10px;border:1px solid var(--amber-b);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--amber-pale);color:var(--ink);outline:none;">
             <option value="">— Add a spirit —</option>
-            ${activeLiq().map((l,li)=>`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`).join('')}
+            ${LIQUOR.map((l,li)=>l.on?`<option value="${li}">${escH(l.name)} ($${l.price.toFixed(2)}/oz)</option>`:'').join('')}
           </select>
           <button class="add-item-btn" style="background:var(--amber-pale);color:var(--amber);border-color:var(--amber-b);flex-shrink:0" onclick="addRestockLiq(${n})">+ Add</button>`;
         const liqRowsContainer = $(`restockLiqRows_${n}`);
@@ -3284,15 +3284,16 @@ async function sendReport(){
   activeProd().forEach((grp,gi)=>{
     grp.items.forEach((item, ii) => {
       if(!item.on) return;
-      const key=`${gi}_${ii}`;
       const opening=getOpenCount(gi, ii);
       let totalRestock=0;
       for(let r=1;r<=restockCount;r++) totalRestock+=getRestockCount(r, gi, ii);
       const subtotal=opening+totalRestock;
-      if(!subtotal && !posSoldMap[key]) return;
+      // Look up POS by stable item name (not by gi_ii), so admin reorder
+      // during the shift can't swap the POS quantity between two items.
+      const actual=posSoldMap[item.name]||0;
+      if(!subtotal && !actual) return;
       const closing=getCloseCount(gi,ii);
       const theo=subtotal>0?subtotal-closing:'—';
-      const actual=posSoldMap[key]||0;
       const variance=typeof theo==='number'?theo-actual:'—';
       const theoStr   = typeof theo==='number' ? String(theo).padStart(6) : '     —';
       const varStr    = typeof variance==='number' ? ((variance>=0?'+':'')+variance).padStart(6) : '     —';
@@ -3500,15 +3501,18 @@ function showStatus(t,m){$('emailStatus').innerHTML=`<div class="status-msg ${t}
 // ── Navigation ────────────────────────────────────────────────────────────
 // ── Reconciliation ────────────────────────────────────────────────────────
 function getPosActualSold() {
-  // Returns {key: qty} for all packaged items sold via POS
+  // Returns {item.name: qty} for all packaged items sold via POS.
+  //
+  // Keyed by item.name (which is stable across admin insert/reorder/delete),
+  // NOT by gi_ii position. The positional key was fragile: if a product was
+  // dragged to a new position mid-shift, an order stored with the old gi_ii
+  // would attribute its POS quantity to whichever item now occupies that
+  // slot — the Ginger-Ale-shows-as-Diet-Pepsi bug on 7/8/2026.
   const sold = {};
   posOrders.forEach(order => {
     order.items.forEach(item => {
-      if(item.isLiq) return;
-      if(item.gi !== null && item.ii !== null) {
-        const k = `${item.gi}_${item.ii}`;
-        sold[k] = (sold[k]||0) + item.qty;
-      }
+      if(item.isLiq || !item.name) return;
+      sold[item.name] = (sold[item.name] || 0) + item.qty;
     });
   });
   return sold;
@@ -3583,7 +3587,6 @@ function renderRecon() {
   prod.forEach((grp, gi) => {
     grp.items.forEach((item, ii) => {
       if(!item.on) return;
-      const key = `${gi}_${ii}`;
       const opening = getOpenCount(gi, ii);
       const restocks = {};
       for(let r=1; r<=restockCount; r++){
@@ -3592,8 +3595,9 @@ function renderRecon() {
       }
       const totalRestock = Object.values(restocks).reduce((s,q)=>s+q,0);
       const subtotalAvail = opening + totalRestock;
-      if(subtotalAvail === 0 && !posSold[key]) return;
-      const actualSold = posSold[key] || 0;
+      // Look up by stable item name (matches the change to getPosActualSold)
+      const actualSold = posSold[item.name] || 0;
+      if(subtotalAvail === 0 && !actualSold) return;
       let closingVal, theoreticalSold, endingCount, variance;
       if(closingSubmitted){
         // Actual: use physical closing count
@@ -4302,6 +4306,32 @@ function addNewLiq(){
 
 async function applyAdmin(){
   syncDraftInputs();
+  // ── Locked-shift guard ────────────────────────────────────────────────
+  // Detect whether the catalog is materially changing while a shift is in
+  // progress. Modifying products or liquor mid-shift can misattribute POS
+  // quantities to the wrong item (the reconciliation is keyed by item
+  // name now, but openingCounts / restockCounts are still keyed by gi_ii
+  // and shift when positions move). Force the operator to acknowledge.
+  const shiftInProgress = openingLocked && !closingSubmitted;
+  if(shiftInProgress){
+    const catalogChanged =
+      JSON.stringify(PRODUCTS) !== JSON.stringify(draft.products) ||
+      JSON.stringify(LIQUOR)   !== JSON.stringify(draft.liquor);
+    if(catalogChanged){
+      const ok = confirm(
+        '⚠ A shift is in progress on this iPad.\n\n' +
+        'Changing Products or Liquor now can misalign the opening / restock ' +
+        'counts and cause the reconciliation to attribute sales to the wrong ' +
+        'item.\n\n' +
+        'Safer alternatives:\n' +
+        '  • Wait until the shift is closed to change the catalog, OR\n' +
+        '  • Only ADD new items (they append to the end and are safe), OR\n' +
+        '  • Only change prices/toggles (safe).\n\n' +
+        'Do you want to apply these changes anyway?'
+      );
+      if(!ok) return;
+    }
+  }
   PRODUCTS=JSON.parse(JSON.stringify(draft.products));
   LIQUOR=JSON.parse(JSON.stringify(draft.liquor));
   SUPPLIES=[...draft.supplies];
@@ -4361,13 +4391,30 @@ function recomputeInventory() {
     });
   });
 
-  // 2. Add all locked restock rounds
+  // 2. Add all restock rounds — LOCKED rounds use the snapshot in
+  //    restockCounts[r]; UNLOCKED (in-progress) rounds read the live DOM so
+  //    the POS grid and posInventory stay in sync. Without this, an item
+  //    added to a restock but sold before the round is locked would show
+  //    up on the POS grid (via getSessionItems), but its sale would
+  //    subtract from an empty inventory slot and drive the count negative.
   for(let r = 1; r <= restockCount; r++){
-    if(!lockedRestocks.has(r)) continue;
-    const rc = restockCounts[r] || {};
-    Object.entries(rc).forEach(([key, qty]) => {
-      posInventory[key] = (posInventory[key] || 0) + qty;
-    });
+    if(lockedRestocks.has(r)){
+      const rc = restockCounts[r] || {};
+      Object.entries(rc).forEach(([key, qty]) => {
+        posInventory[key] = (posInventory[key] || 0) + qty;
+      });
+    } else {
+      activeProd().forEach((grp, gi) => {
+        grp.items.forEach((item, ii) => {
+          if(!item.on) return;
+          const qty = parseInt(($(`add${r}_g${gi}_i${ii}`) || {}).value) || 0;
+          if(qty > 0){
+            const key = `${gi}_${ii}`;
+            posInventory[key] = (posInventory[key] || 0) + qty;
+          }
+        });
+      });
+    }
   }
 
   // 3. Subtract all confirmed sold orders
