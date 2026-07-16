@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T18:16:17.148Z",
+  "updatedAt": "2026-07-16T21:53:13.329Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -249,7 +249,7 @@
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1260,
-      "emptyWeight": 0
+      "emptyWeight": 545
     },
     {
       "name": "Patron Silver",
@@ -257,7 +257,7 @@
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1440,
-      "emptyWeight": 0
+      "emptyWeight": 730
     },
     {
       "name": "Bacardi White Rum",
@@ -289,35 +289,39 @@
       "on": true,
       "bottleSizeMl": 750,
       "fullWeight": 1300,
-      "emptyWeight": 0
+      "emptyWeight": 535
     },
     {
       "name": "Sambuca",
       "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1220
+      "fullWeight": 1220,
+      "emptyWeight": 420
     },
     {
       "name": "Sourpuss",
       "price": 5.71,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1290
+      "fullWeight": 1290,
+      "emptyWeight": 480
     },
     {
       "name": "Crown Royal Whisky",
       "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1275
+      "fullWeight": 1275,
+      "emptyWeight": 580
     },
     {
       "name": "Bailey's Irish Cream",
       "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 1210
+      "fullWeight": 1210,
+      "emptyWeight": 425
     }
   ],
   "SUPPLIES": [
@@ -495,5 +499,7 @@
       "active": true
     }
   ],
-  "REQUIRE_MANAGER_APPROVAL": true
+  "REQUIRE_MANAGER_APPROVAL": true,
+  "DRINK_TICKETS_ENABLED": false,
+  "ADMIN_EMAIL": "paul@h2-solutions.ca"
 }
