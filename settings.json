@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-23T20:14:49.932Z",
+  "updatedAt": "2026-07-24T15:54:24.483Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -505,6 +505,6 @@
     }
   ],
   "REQUIRE_MANAGER_APPROVAL": true,
-  "DRINK_TICKETS_ENABLED": true,
+  "DRINK_TICKETS_ENABLED": false,
   "ADMIN_EMAIL": "paul@h2-solutions.ca"
 }
