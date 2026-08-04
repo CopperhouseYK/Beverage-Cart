@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-24T15:54:24.483Z",
+  "updatedAt": "2026-08-04T15:24:38.578Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -285,8 +285,8 @@
       "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 960,
-      "emptyWeight": 0
+      "fullWeight": 770,
+      "emptyWeight": 70
     },
     {
       "name": "Fireball Cinnamon Whisky",
