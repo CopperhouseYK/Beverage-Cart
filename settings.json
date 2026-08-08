@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-07T20:46:43.704Z",
+  "updatedAt": "2026-08-08T17:39:33.882Z",
   "updatedBy": "accounting@copperhouse.ca",
   "PRODUCTS": [
     {
@@ -277,8 +277,8 @@
       "price": 6.67,
       "on": true,
       "bottleSizeMl": 750,
-      "fullWeight": 980,
-      "emptyWeight": 0
+      "fullWeight": 770,
+      "emptyWeight": 70
     },
     {
       "name": "Smirnoff Vodka",
